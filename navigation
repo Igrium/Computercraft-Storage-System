@@ -1,0 +1,89 @@
+-- Designed to work in a system of interlocking pathways without additional obsticles, with access to a gps unit.
+-- For now, direction is assumed North.
+os.loadAPI("database")
+
+global coords = vector.new(0,0,0)
+global xCorridors = {0}
+global zCorridors = {0}
+global roomExtents = {0}
+
+-- Uses the GPS to callibrate the turtle's location
+function callibrate()
+	coords = vector.new(gps.locate(5))
+end
+
+-- Refreshes local variables with variables from the master database
+function refreshInfo()
+	xCorridors = database.getXCorridors()
+	zCorridors = database.getZCorridors()
+	roomExtents = database.getRoomExtents()
+end
+
+function navigate(x, y, z)
+	-- Make sure coords are in room
+	if not (isBetween(roomExtents[0], roomExtents[1], x) and isBetween(roomExtents[2], roomExtents[3], y) and isBetween(roomExtents[4], roomExtents[5], z)) then
+		print ("("...x...", "...y...", "...x...") is not within the room extents.")
+		return
+	end
+	
+	-- Make sure target destination is on a corridor
+	if not (tableContains(zCorridors, x) and tableContains(xCorridors, z)) then
+		print ("("...x...", "...y...", "...x...") is not within a corridor, and therefore the turtle can not access it.")
+		return
+	end
+	
+	
+	
+end
+
+-- Given a current X coordinate, move to the given one
+local function moveToX(current, target)
+	if current < target then
+		turtle.turnRight()
+		for i=1,(target-current),1 do
+			turtle.forward()
+		end
+		turtle.turnLeft()
+	end
+	if current > target then
+		turtle.turnLeft()
+		for i=1,(current-target),1 do
+			turtle.forward()
+		end
+		turtle.turnRight()
+	end
+
+-- Finds the nearsest value to 'number' in the given table
+local function nearestValue(table, number)
+    local smallestSoFar, smallestIndex
+    for i, y in ipairs(table) do
+        if not smallestSoFar or (math.abs(number-y) < smallestSoFar) then
+            smallestSoFar = math.abs(number-y)
+            smallestIndex = i
+        end
+    end
+    return table[smallestIndex]
+end
+
+-- Checks if num is between num1 and num2. Num1 must be less than num2.
+local function isBetween (num1, num2, num)
+	return num1 >= num and num >= num2
+end
+
+-- Checks if a table has a value
+local function tableContains (tab, val)
+    for index, value in ipairs(tab) do
+        if value == val then
+            return true
+        end
+    end
+
+    return false
+end
+
+function main()
+	callibrate()
+	refreshInfo()
+	moveToX(coords[0],-448)
+end
+main()

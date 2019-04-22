@@ -1,0 +1,17 @@
+-- API for dealing with accessing things from the master database
+-- Local wrapper for now. Will use Rednet in the future.
+
+-- Gets the corridors on the X axis the turtle can move along
+function getXCorridors()
+	return {1243,1237,1231}
+end
+
+-- Gets the corridors on the Z axis the turtle can move along
+function getZCorridors()
+	return {-446,-440,-435}
+end
+
+-- Returns the coordinates for the bounds of the room
+function getRoomExtents()
+	return {-446, -435, 56, 100, 1231, 1243}
+end
