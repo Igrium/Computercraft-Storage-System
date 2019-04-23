@@ -1,7 +1,6 @@
 -- Designed to work in a system of interlocking pathways without additional obsticles, with access to a gps unit.
 -- For now, direction is assumed North.
 os.loadAPI("disk/database")
-os.loadAPI("disk/storageutils")
 
 coords = vector.new(0,0,0)
 -- X cooridors are cooridors in which the turtle can move along the x axis, and are defined by their z value. Z corridors are likewize.
@@ -70,28 +69,24 @@ end
 	
 
 -- Get's whether this turtle in an x corridor, a z corridor, or a cross (intersection)
-function getLocationType(x, y, z)
+function getLocationType(x, z)
 	coords = vector.new(gps.locate(5))
 	
 	-- What corridor is it in?
 	local xCorridor = tableContains(xCorridors, z)
 	local zCorridor = tableContains(zCorridors, x)
 	
-	print(xCorridor)
-	print(zCorridor)
+	--print(xCorridor)
+	--print(zCorridor)
 	
 	-- Deturmine type
 	if xCorridor and zCorridor then
-		print("cross")
 		return "cross"
 	elseif xCorridor then
-		print("xCorr")
 		return "xCorridor"
 	elseif zCorridor then
-		print("yCoor")
 		return "zCorridor"
 	else
-		print("none")
 		return "none"
 	end
 	
@@ -114,7 +109,7 @@ function faceDirection(newDirection)
 	-- Handle specific west-north scenareo
 	if direction == "north" and newDirection == "west" then
 		turtle.turnLeft()
-	elseif direction == "west" and newDirectoin == "north" then
+	elseif direction == "west" and newDirection == "north" then
 		turtle.turnRight()
 	
 	-- if the new direction is conterclockwize of the current one, turn left
@@ -169,7 +164,7 @@ function moveToX(target)
 end
 
 function moveToY(target)
-	if coords['y'] < coords['y'] then
+	if coords['y'] < target then
 		for i=1,(target-coords['y']),1 do
 			turtle.up()
 		end
@@ -202,8 +197,8 @@ end
 -- Recursive function that handles navigation to the designated coordinates
 function navigate(x, y, z)
 	-- Make sure coords are in room
-	--if not (isBetween(roomExtents[1], roomExtents[2], x) and isBetween(roomExtents[3], roomExtents[4], y) and isBetween(roomExtents[5], roomExtents[6], z)) then
-		--print("("..x..", "..y..", "..x..") is not within the room extents.")
+	--if not ((roomExtents[1] <= x <= roomExtents[2]) and (roomExtents[3] <= y <= roomExtents[4]) and (roomExtents[5] <= z <= roomExtents[6])) then
+		--print("("..x..", "..y..", "..z..") is not within the room extents.")
 		--return
 	--end
 	
@@ -218,8 +213,9 @@ function navigate(x, y, z)
 		return
 	end
 	
-	local locationType = getLocationType(coords['x'], coords['y'], coords['z'])
+	local locationType = getLocationType(coords['x'],coords['z'])
 	local targetLocationType = getLocationType(x, y, z)
+	
 	
 	if locationType == "none" then
 		print("Unable to complete navigation because current location is not on a corridor")
@@ -237,10 +233,10 @@ function navigate(x, y, z)
 		moveToX(x)
 	
 	-- Move to next best available space
-	elseif (locationType == "xCorridor" or locationType == "cross") and (locationType == "zCorridor" or locationType == "cross") then
+	elseif (locationType == "xCorridor" or locationType == "cross") and (targetLocationType == "zCorridor" or targetLocationType == "cross") then
 		moveToX(x)
 		navigate(x, y, z)
-	elseif (locationType == "zCorridor" or locationType == "cross") and (locationType == "xCorridor" or locationType == "cross") then
+	elseif (locationType == "zCorridor" or locationType == "cross") and (targetLocationType == "xCorridor" or targetLocationType == "cross") then
 		moveToZ(z)
 		navigate(x, y, z)
 		
@@ -249,7 +245,8 @@ function navigate(x, y, z)
 		moveToX(chooseCorridor(zCorridors, coords['x'], x))
 		navigate(x, y, z)
 	elseif locationType == "zCorridor" and targetLocationType == "zCorridor" then
-		moveToZ(chooseCorridor(zCorridors, coords['z'], z))
+		local corridor = chooseCorridor(xCorridors, coords['z'], z)
+		moveToZ(corridor)
 		navigate(x, y, z)
 	
 	else
@@ -263,11 +260,7 @@ function main()
 	callibrate()
 	refreshInfo()
 	
-	--print(coords['x'])
-	print(getLocationType(coords['x'], coords['z']))
-	--print(tableContains({1243,1237,1231}, coords['z']))
-	
-	navigate(-440, 56, 1234)
+	navigate(-440, 60, 1234)
 	
 	
 end
