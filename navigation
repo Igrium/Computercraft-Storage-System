@@ -1,11 +1,16 @@
 -- Designed to work in a system of interlocking pathways without additional obsticles, with access to a gps unit.
 -- For now, direction is assumed North.
-os.loadAPI("database")
+os.loadAPI("disk/database")
+os.loadAPI("disk/storageutils")
 
-global coords = vector.new(0,0,0)
-global xCorridors = {0}
-global zCorridors = {0}
-global roomExtents = {0}
+coords = vector.new(0,0,0)
+-- X cooridors are cooridors in which the turtle can move along the x axis, and are defined by their z value. Z corridors are likewize.
+xCorridors = {0}
+zCorridors = {0}
+roomExtents = {0}
+
+directions = {"north", "east", "south", "west"}
+direction = "north"
 
 -- Uses the GPS to callibrate the turtle's location
 function callibrate()
@@ -14,44 +19,11 @@ end
 
 -- Refreshes local variables with variables from the master database
 function refreshInfo()
+	print("Refreshing Info")
 	xCorridors = database.getXCorridors()
-	zCorridors = database.getZCorridors()
+	zCorridors =database.getZCorridors()
 	roomExtents = database.getRoomExtents()
 end
-
-function navigate(x, y, z)
-	-- Make sure coords are in room
-	if not (isBetween(roomExtents[0], roomExtents[1], x) and isBetween(roomExtents[2], roomExtents[3], y) and isBetween(roomExtents[4], roomExtents[5], z)) then
-		print ("("...x...", "...y...", "...x...") is not within the room extents.")
-		return
-	end
-	
-	-- Make sure target destination is on a corridor
-	if not (tableContains(zCorridors, x) and tableContains(xCorridors, z)) then
-		print ("("...x...", "...y...", "...x...") is not within a corridor, and therefore the turtle can not access it.")
-		return
-	end
-	
-	
-	
-end
-
--- Given a current X coordinate, move to the given one
-local function moveToX(current, target)
-	if current < target then
-		turtle.turnRight()
-		for i=1,(target-current),1 do
-			turtle.forward()
-		end
-		turtle.turnLeft()
-	end
-	if current > target then
-		turtle.turnLeft()
-		for i=1,(current-target),1 do
-			turtle.forward()
-		end
-		turtle.turnRight()
-	end
 
 -- Finds the nearsest value to 'number' in the given table
 local function nearestValue(table, number)
@@ -65,13 +37,14 @@ local function nearestValue(table, number)
     return table[smallestIndex]
 end
 
+
 -- Checks if num is between num1 and num2. Num1 must be less than num2.
 local function isBetween (num1, num2, num)
 	return num1 >= num and num >= num2
 end
 
 -- Checks if a table has a value
-local function tableContains (tab, val)
+local function tableContains(tab, val)
     for index, value in ipairs(tab) do
         if value == val then
             return true
@@ -81,9 +54,222 @@ local function tableContains (tab, val)
     return false
 end
 
+local function getIndexOfValue(tab, val)
+	local index={}
+	for k,v in pairs(tab) do
+		index[v]=k
+	end
+	return index[val]
+end
+
+-- given current and target coordinate, and a list a corridors, choose a corridor to use (x or z)
+local function chooseCorridor(corridors, current, target)
+	local median = (current + target) / 2
+	return nearestValue(corridors, median)
+end
+	
+
+-- Get's whether this turtle in an x corridor, a z corridor, or a cross (intersection)
+function getLocationType(x, y, z)
+	coords = vector.new(gps.locate(5))
+	
+	-- What corridor is it in?
+	local xCorridor = tableContains(xCorridors, z)
+	local zCorridor = tableContains(zCorridors, x)
+	
+	print(xCorridor)
+	print(zCorridor)
+	
+	-- Deturmine type
+	if xCorridor and zCorridor then
+		print("cross")
+		return "cross"
+	elseif xCorridor then
+		print("xCorr")
+		return "xCorridor"
+	elseif zCorridor then
+		print("yCoor")
+		return "zCorridor"
+	else
+		print("none")
+		return "none"
+	end
+	
+end
+
+
+function faceDirection(newDirection)
+	-- check direction is valid
+	if not tableContains(directions, direction) then
+		print(newDirection.." is not a valid direction.")
+		return
+	end
+	if direction == newDirection then
+		return
+	end
+	
+	-- Find how far we have to turn
+	local distance = math.abs(getIndexOfValue(directions,direction) - getIndexOfValue(directions, newDirection))
+	
+	-- Handle specific west-north scenareo
+	if direction == "north" and newDirection == "west" then
+		turtle.turnLeft()
+	elseif direction == "west" and newDirectoin == "north" then
+		turtle.turnRight()
+	
+	-- if the new direction is conterclockwize of the current one, turn left
+	elseif getIndexOfValue(directions, newDirection) < getIndexOfValue(directions, direction) then
+		for i=1,distance,1 do
+			turtle.turnLeft()
+		end
+	elseif getIndexOfValue(directions, newDirection) > getIndexOfValue(directions, direction) then
+		for i=1,distance,1 do
+			turtle.turnRight()
+		end
+	end
+	
+	direction = newDirection
+end
+
+function turnLeft()
+	turtle.turnLeft()
+	-- Handle specific west-north scenareo
+	if direction == "north" then
+		direction = "west"
+	else
+		direction = directions[getIndexOfValue(directions, direction) - 1]
+	end
+end
+
+function turnRight()
+	turtle.turnRight()
+	-- Handle specific west-north scenareo
+	if direction == "west" then
+		direction = "north"
+	else
+		direction = directions[getIndexOfValue(directions, direction) + 1]
+	end
+end
+
+-- Given a current X coordinate, move to the given one
+function moveToX(target)
+	if coords['x'] < target then
+		faceDirection("east")
+		for i=1,(target-coords['x']),1 do
+			turtle.forward()
+		end
+	end
+	if coords['x'] > target then
+		faceDirection("west")
+		for i=1,(coords['x']-target),1 do
+			turtle.forward()
+		end
+	end
+	coords = vector.new(gps.locate(5))
+end
+
+function moveToY(target)
+	if coords['y'] < coords['y'] then
+		for i=1,(target-coords['y']),1 do
+			turtle.up()
+		end
+	end
+	if coords['y'] > target then
+		for i=1,(coords['y']-target),1 do
+			turtle.down()
+		end
+	end
+	coords = vector.new(gps.locate(5))
+end
+
+-- Given a current X coordinate, move to the given one
+function moveToZ(target)
+	if coords['z'] < target then
+		faceDirection("south")
+		for i=1,(target-coords['z']),1 do
+			turtle.forward()
+		end
+	end
+	if coords['z'] > target then
+		faceDirection("north")
+		for i=1,(coords['z']-target),1 do
+			turtle.forward()
+		end
+	end
+	coords = vector.new(gps.locate(5))
+end
+
+-- Recursive function that handles navigation to the designated coordinates
+function navigate(x, y, z)
+	-- Make sure coords are in room
+	--if not (isBetween(roomExtents[1], roomExtents[2], x) and isBetween(roomExtents[3], roomExtents[4], y) and isBetween(roomExtents[5], roomExtents[6], z)) then
+		--print("("..x..", "..y..", "..x..") is not within the room extents.")
+		--return
+	--end
+	
+	-- Make sure target destination is in a corridor
+	if not (tableContains(zCorridors, x) or tableContains(xCorridors, z)) then
+		print("("..x..", "..y..", "..x..") is not within a corridor, and therefore the turtle can not access it.")
+		return
+	end
+	
+	-- Are we already there?
+	if x == coords['x'] and y == coords['y'] and z == coords['z'] then
+		return
+	end
+	
+	local locationType = getLocationType(coords['x'], coords['y'], coords['z'])
+	local targetLocationType = getLocationType(x, y, z)
+	
+	if locationType == "none" then
+		print("Unable to complete navigation because current location is not on a corridor")
+		return
+	end
+	
+	-- Move to Y position
+	moveToY(y)
+	
+	-- Are we in the same corridor?
+	if coords['x'] == x and (locationType == "zCorridor" or locationType == "cross") then
+		moveToZ(z)
+		
+	elseif coords['z'] == z and (locationType == "xCorridor" or locationType == "cross") then
+		moveToX(x)
+	
+	-- Move to next best available space
+	elseif (locationType == "xCorridor" or locationType == "cross") and (locationType == "zCorridor" or locationType == "cross") then
+		moveToX(x)
+		navigate(x, y, z)
+	elseif (locationType == "zCorridor" or locationType == "cross") and (locationType == "xCorridor" or locationType == "cross") then
+		moveToZ(z)
+		navigate(x, y, z)
+		
+	-- Find the closist corridor
+	elseif locationType == "xCorridor" and targetLocationType == "xCorridor" then
+		moveToX(chooseCorridor(zCorridors, coords['x'], x))
+		navigate(x, y, z)
+	elseif locationType == "zCorridor" and targetLocationType == "zCorridor" then
+		moveToZ(chooseCorridor(zCorridors, coords['z'], z))
+		navigate(x, y, z)
+	
+	else
+		print("Unable to complete navigation.")
+		return
+	end
+	
+end
+
 function main()
 	callibrate()
 	refreshInfo()
-	moveToX(coords[0],-448)
+	
+	--print(coords['x'])
+	print(getLocationType(coords['x'], coords['z']))
+	--print(tableContains({1243,1237,1231}, coords['z']))
+	
+	navigate(-440, 56, 1234)
+	
+	
 end
+
 main()
