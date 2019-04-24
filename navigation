@@ -13,8 +13,9 @@ direction = "north"
 
 -- Uses the GPS to callibrate the turtle's location
 function callibrate()
+	refreshInfo()
+
 	coords = vector.new(gps.locate(5))
-	
 	local success = false
 	
 	-- Callibrate rotation
@@ -65,9 +66,6 @@ end
 
 
 -- Checks if num is between num1 and num2. Num1 must be less than num2.
-local function isBetween (num1, num2, num)
-	return num1 >= num and num >= num2
-end
 
 -- Checks if a table has a value
 local function tableContains(tab, val)
@@ -223,16 +221,14 @@ end
 
 -- Recursive function that handles navigation to the designated coordinates
 function navigate(x, y, z)
-	-- Make sure coords are in room
-	--if not ((roomExtents[1] <= x <= roomExtents[2]) and (roomExtents[3] <= y <= roomExtents[4]) and (roomExtents[5] <= z <= roomExtents[6])) then
-		--print("("..x..", "..y..", "..z..") is not within the room extents.")
-		--return
-	--end
+	
+	local locationType = getLocationType(coords['x'],coords['z'])
+	local targetLocationType = getLocationType(x, y, z)
 	
 	-- Make sure target destination is in a corridor
-	if not (tableContains(zCorridors, x) or tableContains(xCorridors, z)) then
-		print("("..x..", "..y..", "..x..") is not within a corridor, and therefore the turtle can not access it.")
-		return
+	if targetLocationType == "none" then
+		print("("..x..", "..y..", "..z..") is not within a corridor, and therefore the turtle can not access it.")
+		return false
 	end
 	
 	-- Are we already there?
@@ -240,13 +236,11 @@ function navigate(x, y, z)
 		return
 	end
 	
-	local locationType = getLocationType(coords['x'],coords['z'])
-	local targetLocationType = getLocationType(x, y, z)
 	
 	
 	if locationType == "none" then
 		print("Unable to complete navigation because current location is not on a corridor")
-		return
+		return false
 	end
 	
 	-- Move to Y position
@@ -278,14 +272,13 @@ function navigate(x, y, z)
 	
 	else
 		print("Unable to complete navigation.")
-		return
+		return false
 	end
 	
 end
 
 function main()
 	callibrate()
-	refreshInfo()
 	
 	navigate(-440, 56, 1234)
 	

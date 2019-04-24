@@ -1,0 +1,67 @@
+-- API for easy handling of items
+os.loadAPI("disk/navigation")
+os.loadAPI("disk/database")
+
+-- Attempt to dump all the turtle's items into the inventory in front
+function dump()
+	local selectedSlot = turtle.getSelectedSlot()
+	local success = true
+	for i=1,16,1 do
+		turtle.select(i)
+		-- If one of the drops doesn't work, success is false.
+		if not turtle.drop() then
+			success = false
+		end
+	end
+	turtle.select(selectedSlot)
+	return success
+end
+
+-- Get the ID string and damage values from the items in the inventory in front of the turtle (requires a homogeneous inventory)
+function getInventoryItemInfo()
+
+	--if (turtle.getItemCount(16) != 0) then
+		--print("Slot 16 must be empty to get inventory item info!")
+		--return
+	--end
+	
+	-- Grab item and analyze it
+	local selectedSlot = turtle.getSelectedSlot()
+	turtle.select(16)
+	
+	if not turtle.suck(1) then
+		print("Unable to obtain item from inventory")
+		return {['name']="none", ['damage']=0}
+	end
+	local data = turtle.getItemDetail()
+	turtle.drop(1)
+	
+	turtle.select(selectedSlot)
+	
+	-- Only return ID and damage. Count is irrelevant.
+	return {['name']=data.name, ['damage']=data.damage}
+end
+
+-- Deposit all items of type into the chest. itemInfo: {['name'],['damage']} Returns success
+function depositAllOfType(itemInfo)
+	local selectedSlot = turtle.getSelectedSlot()
+	local success = false
+	for i=1,16,1 do
+		turtle.select(i)
+		-- If the first paramater is false, Lua will never call turtle.drop()
+		if turtle.getItemCount() > 0 and (turtle.getItemDetail().name == itemInfo.name and turtle.getItemDetail().damage == itemInfo.damage) and turtle.drop() then
+			success = true
+		end
+	end
+	turtle.select(selectedSlot)
+	return success
+end
+
+function main()
+	navigation.callibrate()
+	navigation.navigate(-440, 56, 1234)
+
+	depositAllOfType({['name']="minecraft:dirt",["damage"]=0})
+end
+
+--main()
