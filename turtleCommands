@@ -1,0 +1,62 @@
+-- Code that manages communication between the server and the turtle
+os.loadAPI("disk/database")
+os.loadAPI("disk/config")
+os.loadAPI("disk/navigation")
+os.loadAPI("disk.item")
+
+-- Place selected item in given chest, regardless of chest item type
+function placeItem(slot, chest, count)
+	navigation.navigate(chest.coordinates)
+	navigation.faceDirection(chest.direction)
+	
+	turtle.drop(count)
+end
+
+-- Dumps all items in given chest, regardless of chest item type
+function dumpItems(chest)
+	navigation.navigate(chest.coordinates)
+	navigation.faceDirection(chest.direction)
+
+	item.dump()
+end
+
+-- Deposits all of item type into chest, regardless of chest item type
+function depositAllOfType(itemInfo, chest)
+	navigation.navigate(chest.coordinates)
+	navigation.faceDirection(chest.direction)
+	
+	item.depositAllOfType(itemInfo)
+end
+
+-- Deposits the item in the selected slot to it's appropriate chest. Boolean [all]: deposit all items of type into chest
+function sort(all)
+	itemInfo = turtle.getItemDetail()
+	chests = database.getItemLocations(itemInfo)
+	
+	-- Deal with scenareo where all is nil
+	if all == nil then
+		all = false
+	end
+	
+	if #chests == 0 or chests == nil then
+		print(itemInfo.name.." is not in the storage system!")
+		return false
+	end
+	
+	navigation.navigate(chest.coordinates)
+	navigation.faceDirection(chest.direction)
+	
+	if all then
+		item.depositAllOfType(itemInfo)
+	else
+		turtle.drop()
+	end
+	
+	return true
+end
+
+function main()
+	sort(true)
+end
+
+main()

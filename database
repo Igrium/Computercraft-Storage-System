@@ -13,5 +13,31 @@ end
 
 -- Returns the coordinates for the bounds of the room
 function getRoomExtents()
-	return {-446, -435, 56, 100, 1231, 1243}
+	return {['x1']=-446, ['x2']=-435, ['y1']=56, ['y2']=100, ['z1']=1231, ['z2']=1243}
+end
+
+-- itemInfo: item info object, coordinates: where the turtle can access chest, direction: direction from access coordinates
+function newChest(itemInfo, coordinates, direction)
+	return {['itemInfo']=itemInfo, ['coordinates']=coordinates, ['direction']=direction}
+end
+
+-- Returns a list of all the chests
+function getStorageArrangement()
+	chest = newChest({['name']="minecraft:dirt", ['damage']=0}, vector.new(-440, 56, 1236), "west")
+	return {['1']=chest}
+end
+
+-- Returns a list of all the chests with an specific item type
+function getItemLocations(item)
+	locations = {}
+	totalLocations = getStorageArrangement()
+	
+	-- If item description matches, add chest to locations table
+	for k, v in pairs(totalLocations) do
+		if v.itemInfo.name == item.name and v.itemInfo.damage == item.damage then
+			locations[#locations+1] = v
+		end
+	end
+	
+	return locations
 end

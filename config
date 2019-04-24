@@ -1,0 +1,13 @@
+-- Configures settings that identifies computer in the system
+
+-- turtle, server
+role = "turtle"
+
+-- Computer ID of the turtle managing the chests
+turtleID = 8
+
+-- Computer ID of the central storage server. Only used when turtle must contact server on it's own accord (ex. refueling.)
+serverID = 10
+
+-- Computer ID of the computer holding the database. Usually the central server.
+databaseID = serverID
