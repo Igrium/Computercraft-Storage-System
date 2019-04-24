@@ -1,6 +1,6 @@
 -- Designed to work in a system of interlocking pathways without additional obsticles, with access to a gps unit.
--- For now, direction is assumed North.
 os.loadAPI("disk/database")
+os.loadAPI("database")
 
 coords = vector.new(0,0,0)
 -- X cooridors are cooridors in which the turtle can move along the x axis, and are defined by their z value. Z corridors are likewize.
@@ -14,13 +14,40 @@ direction = "north"
 -- Uses the GPS to callibrate the turtle's location
 function callibrate()
 	coords = vector.new(gps.locate(5))
+	
+	local success = false
+	
+	-- Callibrate rotation
+	while not success do
+		success = turtle.forward()
+		if not success then
+			turtle.turnRight()
+		end
+	end
+	
+	local newLocation = vector.new(gps.locate(5))
+	
+	if newLocation['z'] < coords['z'] then
+		direction = "north"
+	elseif newLocation['z'] > coords['z'] then
+		direction = "south"
+	elseif newLocation['x'] < coords['x'] then
+		direction = "west"
+	elseif newLocation['x'] > coords['x'] then
+		direction = "east"
+	else
+		print("Unable to callibrate rotation")
+		return
+	end
+	
+	turtle.back()
 end
 
 -- Refreshes local variables with variables from the master database
 function refreshInfo()
 	print("Refreshing Info")
 	xCorridors = database.getXCorridors()
-	zCorridors =database.getZCorridors()
+	zCorridors = database.getZCorridors()
 	roomExtents = database.getRoomExtents()
 end
 
@@ -260,7 +287,7 @@ function main()
 	callibrate()
 	refreshInfo()
 	
-	navigate(-440, 60, 1234)
+	navigate(-440, 56, 1234)
 	
 	
 end
