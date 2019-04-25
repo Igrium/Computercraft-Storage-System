@@ -75,7 +75,10 @@ function sortAll(backupChest)
 			sort(true)
 		end
 	end
-	
+	-- Put remaining items in backupChest if nessicary
+	if (backupChest ~= nill) and item.hasItems() then
+		turtle.dumpItems(backupChest)
+	end
 	
 end
 

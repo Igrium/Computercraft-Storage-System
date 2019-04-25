@@ -56,3 +56,13 @@ function depositAllOfType(itemInfo)
 	turtle.select(selectedSlot)
 	return success
 end
+
+-- Does this turtle currently have any items
+function hasItems()
+	for i=1,16,1 do
+		if turtle.getItemCount(i) > 0 then
+			return true
+		end
+	end
+	return false
+end

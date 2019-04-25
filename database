@@ -21,7 +21,8 @@ end
 function getStorageArrangement()
 	local chest1 = chest.new({['name']="minecraft:dirt", ['damage']=0}, vector.new(-440, 56, 1234), "west")
 	local chest2 = chest.new({['name']="minecraft:stone", ['damage']=0}, vector.new(-437, 56, 1237), "north")
-	return {['1']=chest1,['2']=chest2}
+	local backupChest = chest.new({['name']="any", ['damage']=0}, vector.new(-442, 56, 1243), "south")
+	return {['1']=chest1,['2']=chest2, ['backupChest']=backupChest}
 end
 
 -- Returns a list of all the chests with an specific item type
