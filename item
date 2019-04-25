@@ -1,6 +1,6 @@
 -- API for easy handling of items
-os.loadAPI("disk/navigation")
-os.loadAPI("disk/database")
+os.loadAPI("navigation")
+os.loadAPI("database")
 
 -- Attempt to dump all the turtle's items into the inventory in front
 function dump()
@@ -56,12 +56,3 @@ function depositAllOfType(itemInfo)
 	turtle.select(selectedSlot)
 	return success
 end
-
-function main()
-	navigation.callibrate()
-	navigation.navigate(-440, 56, 1234)
-
-	depositAllOfType({['name']="minecraft:dirt",["damage"]=0})
-end
-
---main()

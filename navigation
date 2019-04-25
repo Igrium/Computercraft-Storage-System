@@ -1,6 +1,6 @@
 -- Designed to work in a system of interlocking pathways without additional obsticles, with access to a gps unit.
-os.loadAPI("disk/database")
 os.loadAPI("database")
+--os.loadAPI("database")
 
 coords = vector.new(0,0,0)
 -- X cooridors are cooridors in which the turtle can move along the x axis, and are defined by their z value. Z corridors are likewize.

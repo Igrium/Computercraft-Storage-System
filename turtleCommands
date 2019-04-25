@@ -1,8 +1,8 @@
 -- Code that manages communication between the server and the turtle
-os.loadAPI("disk/database")
-os.loadAPI("disk/config")
-os.loadAPI("disk/navigation")
-os.loadAPI("disk.item")
+os.loadAPI("database")
+os.loadAPI("config")
+os.loadAPI("navigation")
+os.loadAPI("item")
 
 -- Place selected item in given chest, regardless of chest item type
 function placeItem(slot, chest, count)
@@ -30,20 +30,30 @@ end
 
 -- Deposits the item in the selected slot to it's appropriate chest. Boolean [all]: deposit all items of type into chest
 function sort(all)
-	itemInfo = turtle.getItemDetail()
-	chests = database.getItemLocations(itemInfo)
+	if turtle.getItemDetail() == nil then
+		print("No item in slot "..turtle.getSelectedSlot())
+		return false
+	end
+	
+	local itemInfo = turtle.getItemDetail()
+	local chests = database.getItemLocations(itemInfo)
 	
 	-- Deal with scenareo where all is nil
 	if all == nil then
 		all = false
 	end
 	
+	
 	if #chests == 0 or chests == nil then
 		print(itemInfo.name.." is not in the storage system!")
 		return false
 	end
 	
-	navigation.navigate(chest.coordinates)
+	local chest = chests[1]
+	
+	print(chest.coordinates)
+	
+	navigation.navigate(chest.coordinates.x, chest.coordinates.y, chest.coordinates.z)
 	navigation.faceDirection(chest.direction)
 	
 	if all then
@@ -56,6 +66,7 @@ function sort(all)
 end
 
 function main()
+	navigation.callibrate()
 	sort(true)
 end
 
