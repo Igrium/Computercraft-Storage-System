@@ -1,5 +1,6 @@
 -- API for dealing with accessing things from the master database
 -- Local wrapper for now. Will use Rednet in the future.
+os.loadAPI("chest")
 
 -- Gets the corridors on the X axis the turtle can move along
 function getXCorridors()
@@ -16,16 +17,11 @@ function getRoomExtents()
 	return {['x1']=-446, ['x2']=-435, ['y1']=56, ['y2']=100, ['z1']=1231, ['z2']=1243}
 end
 
--- itemInfo: item info object, coordinates: where the turtle can access chest, direction: direction from access coordinates
-function newChest(itemInfo, coordinates, direction)
-	return {['itemInfo']=itemInfo, ['coordinates']=coordinates, ['direction']=direction}
-end
-
 -- Returns a list of all the chests
 function getStorageArrangement()
-	chest = newChest({['name']="minecraft:dirt", ['damage']=0}, vector.new(-440, 56, 1234), "west")
-	chest2 = newChest({['name']="minecraft:stone", ['damage']=0}, vector.new(-437, 56, 1237), "north")
-	return {['1']=chest,['2']=chest2}
+	local chest1 = chest.new({['name']="minecraft:dirt", ['damage']=0}, vector.new(-440, 56, 1234), "west")
+	local chest2 = chest.new({['name']="minecraft:stone", ['damage']=0}, vector.new(-437, 56, 1237), "north")
+	return {['1']=chest1,['2']=chest2}
 end
 
 -- Returns a list of all the chests with an specific item type

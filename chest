@@ -1,0 +1,6 @@
+-- Chest object keeps track of chest location and contents
+
+-- itemInfo: item info object, coordinates: where the turtle can access chest, direction: direction from access coordinates
+function new(itemInfo, coordinates, direction)
+	return {['itemInfo']=itemInfo, ['coordinates']=coordinates, ['direction']=direction}
+end
