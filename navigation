@@ -222,18 +222,18 @@ end
 -- Recursive function that handles navigation to the designated coordinates
 function navigate(x, y, z)
 	
-	local locationType = getLocationType(coords['x'],coords['z'])
-	local targetLocationType = getLocationType(x, y, z)
+	local locationType = getLocationType(coords['x'], coords['z'])
+	local targetLocationType = getLocationType(x, z)
 	
 	-- Make sure target destination is in a corridor
 	if targetLocationType == "none" then
 		print("("..x..", "..y..", "..z..") is not within a corridor, and therefore the turtle can not access it.")
 		return false
 	end
-	
+
 	-- Are we already there?
 	if x == coords['x'] and y == coords['y'] and z == coords['z'] then
-		return
+		return true
 	end
 	
 	
@@ -249,10 +249,9 @@ function navigate(x, y, z)
 	-- Are we in the same corridor?
 	if coords['x'] == x and (locationType == "zCorridor" or locationType == "cross") then
 		moveToZ(z)
-		
 	elseif coords['z'] == z and (locationType == "xCorridor" or locationType == "cross") then
 		moveToX(x)
-	
+		
 	-- Move to next best available space
 	elseif (locationType == "xCorridor" or locationType == "cross") and (targetLocationType == "zCorridor" or targetLocationType == "cross") then
 		moveToX(x)
@@ -274,7 +273,7 @@ function navigate(x, y, z)
 		print("Unable to complete navigation.")
 		return false
 	end
-	
+	return true
 end
 
 function main()

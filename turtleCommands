@@ -51,23 +51,35 @@ function sort(all)
 	
 	local chest = chests[1]
 	
-	print(chest.coordinates)
 	
-	navigation.navigate(chest.coordinates.x, chest.coordinates.y, chest.coordinates.z)
-	navigation.faceDirection(chest.direction)
+	if navigation.navigate(chest.coordinates.x, chest.coordinates.y, chest.coordinates.z) then
+		navigation.faceDirection(chest.direction)
 	
-	if all then
-		item.depositAllOfType(itemInfo)
+		if all then
+			item.depositAllOfType(itemInfo)
+		else
+			turtle.drop()
+		end
+		return true
 	else
-		turtle.drop()
+		return false
 	end
-	
-	return true
+end
+
+-- Sort all of the turtle's items into the storage system. [backupChest]: Chest to deposit unsorted items into
+function sortAll(backupChest)
+	-- Repeat for each 
+	for i=1,16,1 do
+		turtle.select(i)
+		if turtle.getItemCount() > 0 then
+			sort(true)
+		end
+	end
 end
 
 function main()
 	navigation.callibrate()
-	sort(true)
+	sortAll()
 end
 
 main()

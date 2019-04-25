@@ -24,7 +24,8 @@ end
 -- Returns a list of all the chests
 function getStorageArrangement()
 	chest = newChest({['name']="minecraft:dirt", ['damage']=0}, vector.new(-440, 56, 1234), "west")
-	return {['1']=chest}
+	chest2 = newChest({['name']="minecraft:stone", ['damage']=0}, vector.new(-437, 56, 1237), "north")
+	return {['1']=chest,['2']=chest2}
 end
 
 -- Returns a list of all the chests with an specific item type
@@ -34,7 +35,6 @@ function getItemLocations(item)
 	
 	-- If item description matches, add chest to locations table
 	for k, v in pairs(totalLocations) do
-		print(item)
 		if v.itemInfo.name == item.name and v.itemInfo.damage == item.damage then
 			locations[#locations+1] = v
 		end
