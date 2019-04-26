@@ -82,9 +82,33 @@ function sortAll(backupChest)
 	
 end
 
+-- Collect a number of items from a chest. Returns: success
+function collect(chest, amount)
+	if navigation.navigate(chest.coordinates.x,chest.coordinates.y,chest.coordinates.z)
+		navigation.faceDirection(chest.direction)
+		return turtle.suck(amount)
+	else
+		return false
+	end
+end
+
+-- Collect a certian item
+function collectItem(itemInfo, amount)
+	local chests = database.getItemLocations(itemInfo)
+	
+	if #chests == 0 or chests == nil then
+		print(itemInfo.name.." is not in the storage system!")
+		return false
+	end
+	
+	return collect(chests[1], amount)
+end
+
 function main()
 	navigation.callibrate()
 	sortAll()
+	
+	collect(chests[1], amount)
 end
 
 main()
