@@ -66,3 +66,13 @@ function hasItems()
 	end
 	return false
 end
+
+-- Returns the lowest slot that doesn't have items in it.
+function getLowestOpenSlot()
+	for i=1,16,1 do
+		if turtle.getItemCount(i) == 0 then
+			return i
+		end
+	end
+	return "full"
+end

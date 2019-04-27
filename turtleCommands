@@ -4,28 +4,30 @@ os.loadAPI("config")
 os.loadAPI("navigation")
 os.loadAPI("item")
 
+os.loadAPI("network")
+
 -- Place selected item in given chest, regardless of chest item type
-function placeItem(slot, chest, count)
-	navigation.navigate(chest.coordinates)
-	navigation.faceDirection(chest.direction)
-	
-	turtle.drop(count)
+function placeItem(chest, count)
+	if navigation.navigate(chest.coordinates.x, chest.coordinates.y, chest.coordinates.z) then
+		navigation.faceDirection(chest.direction)
+		turtle.drop(count)
+	end
 end
 
 -- Dumps all items in given chest, regardless of chest item type
 function dumpItems(chest)
-	navigation.navigate(chest.coordinates)
-	navigation.faceDirection(chest.direction)
-
-	item.dump()
+	if navigation.navigate(chest.coordinates.x, chest.coordinates.y, chest.coordinates.z) then
+		navigation.faceDirection(chest.direction)
+		item.dump()
+	end
 end
 
 -- Deposits all of item type into chest, regardless of chest item type
 function depositAllOfType(itemInfo, chest)
-	navigation.navigate(chest.coordinates)
-	navigation.faceDirection(chest.direction)
-	
-	item.depositAllOfType(itemInfo)
+	if navigation.navigate(chest.coordinates.x, chest.coordinates.y, chest.coordinates.z) then
+		navigation.faceDirection(chest.direction)
+		item.depositAllOfType(itemInfo)
+	end
 end
 
 -- Deposits the item in the selected slot to it's appropriate chest. Boolean [all]: deposit all items of type into chest
@@ -51,19 +53,13 @@ function sort(all)
 	
 	local chest = chests[1]
 	
-	
-	if navigation.navigate(chest.coordinates.x, chest.coordinates.y, chest.coordinates.z) then
-		navigation.faceDirection(chest.direction)
-	
-		if all then
-			item.depositAllOfType(itemInfo)
-		else
-			turtle.drop()
-		end
-		return true
+	if all then
+		depositAllOfType(itemInfo, chest)
 	else
-		return false
+		placeItem(chest, turtle.getItemCount())
 	end
+		
+	
 end
 
 -- Sort all of the turtle's items into the storage system. [backupChest]: Chest to deposit unsorted items into
@@ -76,16 +72,41 @@ function sortAll(backupChest)
 		end
 	end
 	-- Put remaining items in backupChest if nessicary
-	if (backupChest ~= nill) and item.hasItems() then
-		turtle.dumpItems(backupChest)
+	if (backupChest ~= nil) and item.hasItems() then
+		print(backupChest.coordinates)
+		dumpItems(backupChest)
 	end
 	
 end
 
 -- Collect a number of items from a chest. Returns: success
-function collect(chest, amount)
-	if navigation.navigate(chest.coordinates.x,chest.coordinates.y,chest.coordinates.z)
+function collect(chest, amount, slot)
+	-- If there isn't enough space in the slot, divide into multiple slots
+	if amount > 64  then
+		local success = true
+		for i=1,math.floor(amount/64),1 do
+			if not collect(chest,64) then
+				success = false
+			end
+		end
+		-- Deal with remainder stack
+		local remainder = math.fmod(amount, 64)
+		
+		-- Order of operations means collect isn't run if remainder = 0.
+		if remainder > 0 and not collect(chest, remainder) then
+			success = false
+		end
+		return success
+	end
+
+	-- Slot default
+	if slot == nil then
+		slot = item.getLowestOpenSlot()
+	end
+
+	if navigation.navigate(chest.coordinates.x,chest.coordinates.y,chest.coordinates.z) then
 		navigation.faceDirection(chest.direction)
+		turtle.select(slot)
 		return turtle.suck(amount)
 	else
 		return false
@@ -93,22 +114,23 @@ function collect(chest, amount)
 end
 
 -- Collect a certian item
-function collectItem(itemInfo, amount)
+function collectItem(itemInfo, amount, slot)
 	local chests = database.getItemLocations(itemInfo)
 	
 	if #chests == 0 or chests == nil then
-		print(itemInfo.name.." is not in the storage system!")
+		print(itemInfo['name'].." is not in the storage system!")
 		return false
 	end
 	
-	return collect(chests[1], amount)
+	return collect(chests[1], amount, slot)
 end
 
 function main()
+	network.setupNetwork()
 	navigation.callibrate()
-	sortAll()
+	--sortAll()
 	
-	collect(chests[1], amount)
+	sortAll(database.getStorageArrangement()['backupChest'])
 end
 
 main()

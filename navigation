@@ -225,6 +225,12 @@ function navigate(x, y, z)
 	local locationType = getLocationType(coords['x'], coords['z'])
 	local targetLocationType = getLocationType(x, z)
 	
+	-- Make sure coordinates are valid
+	if x == nil or y == nil or z == nil then
+		print("Coordinates are nil!")
+		return false
+	end
+	
 	-- Make sure target destination is in a corridor
 	if targetLocationType == "none" then
 		print("("..x..", "..y..", "..z..") is not within a corridor, and therefore the turtle can not access it.")

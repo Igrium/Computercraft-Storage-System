@@ -2,5 +2,22 @@
 
 -- itemInfo: item info object, coordinates: where the turtle can access chest, direction: direction from access coordinates
 function new(itemInfo, coordinates, direction)
-	return {['itemInfo']=itemInfo, ['coordinates']=coordinates, ['direction']=direction}
+	chest = {['itemInfo']=itemInfo,
+	['coordinates']=coordinates,
+	['direction']=direction
+	}
+	
+	function chest:getX()
+		return self.coordinates['x']
+	end
+	
+	function chest:getY()
+		return self.coordinates['y']
+	end
+	
+	function chest:getZ()
+		return self.coordinates['z']
+	end
+	
+	return chest
 end

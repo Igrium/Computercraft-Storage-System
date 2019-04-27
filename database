@@ -1,6 +1,23 @@
 -- API for dealing with accessing things from the master database
--- Local wrapper for now. Will use Rednet in the future.
+-- Database file structure must be root/databaseFiles/chests
+-- Access the database directly with the "database" rednet protocol, and wait for a redmet message with the "dataRecieve" protocol.
+
+-- How long to wait for a response from the database
+timeoutseconds = 5
+
+os.loadAPI("config")
 os.loadAPI("chest")
+os.loadAPI("network")
+-- Load the database if required
+if config.databaseID == os.getComputerID() then
+	os.loadAPI("databaseFiles/chests")
+end	
+
+
+-- Is this computer the database?
+function isDatabase()
+	return config.databaseID == os.getComputerID()
+end
 
 -- Gets the corridors on the X axis the turtle can move along
 function getXCorridors()
@@ -19,10 +36,12 @@ end
 
 -- Returns a list of all the chests
 function getStorageArrangement()
-	local chest1 = chest.new({['name']="minecraft:dirt", ['damage']=0}, vector.new(-440, 56, 1234), "west")
-	local chest2 = chest.new({['name']="minecraft:stone", ['damage']=0}, vector.new(-437, 56, 1237), "north")
-	local backupChest = chest.new({['name']="any", ['damage']=0}, vector.new(-442, 56, 1243), "south")
-	return {['1']=chest1,['2']=chest2, ['backupChest']=backupChest}
+	if isDatabase() then
+		return chests.chests
+	else
+		rednet.send(config.databaseID, "chests", "database")
+		return select(2, rednet.receive("dataRecieve", timeoutseconds))
+	end
 end
 
 -- Returns a list of all the chests with an specific item type
@@ -38,4 +57,30 @@ function getItemLocations(item)
 	end
 	
 	return locations
+end
+
+-- Only called on the database server, takes a string for a database category (eg chests) and returns the data.
+function handleDatabaseRequest(category)
+	if category == "chests" then
+		return getStorageArrangement()
+	end
+end
+
+-- The main function for the database server
+function databaseServer(printOutput)
+	if not isDatabase() then
+		return
+	end
+	
+	local requester = nil
+	local category = nil
+	
+	-- Main loop
+	while true do	
+		requester, category = rednet.receive("database")
+		if printOutput then
+			print("Serving database request from computer "..requester)
+		end
+		rednet.send(requester, handleDatabaseRequest(category), "dataRecieve")
+	end
 end

@@ -1,0 +1,17 @@
+-- Some universal functions relating to the networking
+
+-- Get all modems enabled
+function setupNetwork()
+	local present = false
+	for _, side in pairs(rs.getSides()) do
+		if peripheral.getType(side) == "modem" then
+			present = true
+			rednet.open(side) -- this or wrap to a modem object if you're planning to use the modem API instead of rednet
+		end
+	end
+	if not present then
+		print("A modem was not found, please attach one and re-run this program")
+	end
+	
+	return present;
+end
