@@ -94,6 +94,10 @@ function databaseServer(printOutput)
 		return
 	end
 	
+	network.setupNetwork()
+	
+	print("Starting database server.")
+	
 	local requester = nil
 	local category = nil
 	
@@ -106,3 +110,5 @@ function databaseServer(printOutput)
 		rednet.send(requester, handleDatabaseRequest(category), "dataRecieve")
 	end
 end
+
+databaseServer(true)

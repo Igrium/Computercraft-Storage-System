@@ -14,3 +14,6 @@ serverID = 10
 
 -- Computer ID of the computer holding the database. Usually the central server.
 databaseID = serverID
+
+-- ID of the inventory server
+inventoryServerID = 21

@@ -1,0 +1,45 @@
+-- Code that runs on computers connected to chests via comparator. Runs slightly different codebase than the rest of the system
+os.loadAPI("config")
+
+-- Get all modems enabled
+function setupNetwork()
+	local present = false
+	for _, side in pairs(rs.getSides()) do
+		if peripheral.getType(side) == "modem" then
+			present = true
+			rednet.open(side) -- this or wrap to a modem object if you're planning to use the modem API instead of rednet
+		end
+	end
+	if not present then
+		print("A modem was not found, please attach one and re-run this program")
+	end
+	
+	return present;
+end
+
+-- Get how full a chest is, given the side.
+function getPercentage(side)
+	return redstone.getAnalogInput(side) / 15
+end
+
+function main()
+	setupNetwork()
+	
+	print("Starting inventory monitor")
+	
+	local server = nil
+	local request = nil
+	
+	while true do
+		server, request = rednet.receive("inventoryRequest")
+		-- Check if the request is a chest that belongs to use
+		
+		if request == config.left then
+			rednet.send(server, getPercentage("left"), "inventoryResponse")
+		elseif request == config.right then
+			rednet.send(server, getPercentage("right"), "inventoryResponse")
+		end
+	end
+end
+
+main()

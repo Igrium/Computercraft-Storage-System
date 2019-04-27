@@ -1,0 +1,61 @@
+os.loadAPI("network")
+os.loadAPI("config")
+os.loadAPI("database")
+
+CHESTSIZE = 54
+
+function isInventoryServer()
+	return config.inventoryServerID == os.getComputerID()
+end
+
+-- Ping the monitors and get how full a chest is. ChestID is the key for the chest in the database.
+function getPercentage(chestID)
+	if isInventoryServer() then
+		rednet.broadcast(chestID, "inventoryRequest")
+		local percentage = select(2, rednet.receive("inventoryResponse", 5))
+		return percentage
+	end
+	
+end
+
+-- Get the percentage of the total capacity of an item that is filled
+function getItemPercentage(item)
+	storageArrangement = database.getStorageArrangement()
+	
+	-- Search for chests with the item
+	local chests = {}
+	for k, v in pairs(storageArrangement) do
+		if v.itemInfo.name == item.name and v.itemInfo.damage == item.damage then
+			chests[#chests+1] = k
+		end
+	end
+	
+	-- Check we have the item
+	if #chests == 0 then
+		print(item.name.." is not in the storage system!")
+		return 0
+	end
+	
+	-- Add up the percentages
+	local totalPercent = 0
+	for k, v in pairs(chests) do
+		totalPercent = totalPercent + getPercentage(v)
+	end
+	
+	return totalPercent / #chests
+	
+	
+end
+	
+
+-- Acts as an intermediary between all the inventory monitors and the rest of the system. Must have a wireless modem to connect with turtle.
+function inventoryServer()
+	if not isInventoryServer() then
+		return
+	end
+
+	network.setupNetwork()
+	print(getItemPercentage({['name']="minecraft:planks",['damage']=0}))
+end
+
+inventoryServer()
