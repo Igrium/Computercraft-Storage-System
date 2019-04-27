@@ -8,6 +8,8 @@ timeoutseconds = 5
 os.loadAPI("config")
 os.loadAPI("chest")
 os.loadAPI("network")
+os.loadAPI("inventory")
+
 -- Load the database if required
 if config.databaseID == os.getComputerID() then
 	os.loadAPI("databaseFiles/chests")
@@ -75,6 +77,20 @@ function getItemLocations(item)
 	return locations
 end
 
+-- Get all the chests that have at least (amount) stacks.
+function getFilledItemLocations(item, amount)
+	locations = {}
+	totalLocations = getStorageArrangement()
+	
+	-- If item description matches, add chest to locations table
+	for k, v in pairs(totalLocations) do
+		if v.itemInfo.name == item.name and v.itemInfo.damage == item.damage and (inventory.getPercentage(k) * 54) > amount then
+			locations[#locations+1] = v
+		end
+	end
+	
+	return locations
+end
 -- Only called on the database server, takes a string for a database category (eg chests) and returns the data.
 function handleDatabaseRequest(category)
 	if category == "chests" then
