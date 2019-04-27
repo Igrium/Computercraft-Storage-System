@@ -1,5 +1,5 @@
 -- API for dealing with accessing things from the master database
--- Database file structure must be root/databaseFiles/chests
+-- Database file structure must be root/databaseFiles/chests, roomLayout
 -- Access the database directly with the "database" rednet protocol, and wait for a redmet message with the "dataRecieve" protocol.
 
 -- How long to wait for a response from the database
@@ -11,6 +11,7 @@ os.loadAPI("network")
 -- Load the database if required
 if config.databaseID == os.getComputerID() then
 	os.loadAPI("databaseFiles/chests")
+	os.loadAPI("databaseFiles/roomLayout")
 end	
 
 
@@ -21,17 +22,32 @@ end
 
 -- Gets the corridors on the X axis the turtle can move along
 function getXCorridors()
-	return {1243,1237,1231}
+	if isDatabase() then
+		return roomLayout.xCorridors
+	else
+		rednet.send(config.databaseID, "xCorridors", "database")
+		return select(2, rednet.receive("dataRecieve", timeoutseconds))
+	end
 end
 
 -- Gets the corridors on the Z axis the turtle can move along
 function getZCorridors()
-	return {-446,-440,-435}
+	if isDatabase() then
+		return roomLayout.zCorridors
+	else
+		rednet.send(config.databaseID, "zCorridors", "database")
+		return select(2, rednet.receive("dataRecieve", timeoutseconds))
+	end
 end
 
 -- Returns the coordinates for the bounds of the room
 function getRoomExtents()
-	return {['x1']=-446, ['x2']=-435, ['y1']=56, ['y2']=100, ['z1']=1231, ['z2']=1243}
+	if isDatabase() then
+		return roomLayout.roomExtents
+	else
+		rednet.send(config.databaseID, "roomExtents", "database")
+		return select(2, rednet.receive("dataRecieve", timeoutseconds))
+	end
 end
 
 -- Returns a list of all the chests
@@ -63,6 +79,12 @@ end
 function handleDatabaseRequest(category)
 	if category == "chests" then
 		return getStorageArrangement()
+	elseif category == "xCorridors" then
+		return getXCorridors()
+	elseif category == "zCorridors" then
+		return getZCorridors()
+	elseif category == "roomExtents" then
+		return getRoomExtents()
 	end
 end
 
