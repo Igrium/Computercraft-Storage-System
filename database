@@ -111,4 +111,4 @@ function databaseServer(printOutput)
 	end
 end
 
-databaseServer(true)
+--databaseServer(true)

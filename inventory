@@ -3,6 +3,7 @@ os.loadAPI("config")
 os.loadAPI("database")
 
 CHESTSIZE = 54
+timeoutseconds = 5
 
 function isInventoryServer()
 	return config.inventoryServerID == os.getComputerID()
@@ -14,8 +15,11 @@ function getPercentage(chestID)
 		rednet.broadcast(chestID, "inventoryRequest")
 		local percentage = select(2, rednet.receive("inventoryResponse", 5))
 		return percentage
+	else
+		rednet.send(config.inventoryServerID, chestID, "inventoryQuery")
+		print("Requested chest "..chestID.." from "..config.inventoryServerID)
+		return select(2, rednet.receive("inventoryResponse", timeoutseconds))
 	end
-	
 end
 
 -- Get the percentage of the total capacity of an item that is filled
@@ -46,16 +50,25 @@ function getItemPercentage(item)
 	
 	
 end
-	
 
 -- Acts as an intermediary between all the inventory monitors and the rest of the system. Must have a wireless modem to connect with turtle.
-function inventoryServer()
+function inventoryServer(printOutput)
 	if not isInventoryServer() then
+		print("not inventory  server!")
 		return
 	end
-
-	network.setupNetwork()
-	print(getItemPercentage({['name']="minecraft:planks",['damage']=0}))
+	
+	print("Starting inventory server...")
+	
+	local requester = nil
+	local chestID = nil
+	
+	-- Main loop
+	while true do	
+		requester, chestID = rednet.receive("inventoryQuery")
+		if printOutput then
+			print("Serving inventory request "..chestID.." from computer "..requester)
+		end
+		rednet.send(requester, getPercentage(chestID), "inventoryResponse")
+	end
 end
-
-inventoryServer()
