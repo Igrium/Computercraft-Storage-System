@@ -1,1 +1,5 @@
 -- Not to be confused with turtleCommands api, this is the turtleCommand class itself.
+
+function new(name, ...)
+	return {['name']=name, ['args']=arg}
+end

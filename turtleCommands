@@ -6,6 +6,12 @@ os.loadAPI("item")
 
 os.loadAPI("network")
 
+-- Navigate and face a direction. Takes a vector and a string
+function navigate(destination, direction)
+	navigation.navigate(destination.x, destination.y, destination.z)
+	navigation.faceDirection(direction)
+end
+
 -- Place selected item in given chest, regardless of chest item type
 function placeItem(chest, count)
 	if navigation.navigate(chest.coordinates.x, chest.coordinates.y, chest.coordinates.z) then
@@ -125,6 +131,13 @@ function collectItem(itemInfo, amount, slot)
 	return collect(chests[1], amount, slot)
 end
 
+-- Outputs a pulse of redstone at a given side
+function redstoneOutput(side, length)
+	redstone.setOutput(side, true)
+	os.sleep(length)
+	redstone.setOutput(side, false)
+end
+
 function main()
 	network.setupNetwork()
 	navigation.callibrate()
@@ -133,4 +146,4 @@ function main()
 	sortAll(database.getStorageArrangement()['backupChest'])
 end
 
-main()
+--main()

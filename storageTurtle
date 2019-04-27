@@ -1,0 +1,66 @@
+-- The main program running in storage turtles
+-- Send instructions to the turtle using the "storageTurtle" protocol, sending a turtleCommand object.
+-- Turtle responds with "storageTurtleResponse protocol when done
+
+os.loadAPI("network")
+os.loadAPI("navigation")
+os.loadAPI("turtleCommands")
+os.loadAPI("turtleCommand")
+
+function main()
+	-- Initial setup
+	print("Starting storage turtle")
+	network.setupNetwork()
+	navigation.callibrate()
+	
+	local commands = nil
+	local server = nil
+	local completed = false
+	
+	while true do
+		print("Looking for job...")
+		server, commands = rednet.receive("storageTurtle")
+		completed = true
+		
+		print ("Recieved "..#commands.." commands from computer "..server)
+		
+		for i=1,#commands,1 do
+			-- Execute the commands
+			command = commands[i]
+			if command.name == "navigate" then
+				turtleCommands.navigate(unpack(command.args))
+			elseif command.name == "placeItem" then
+				turtleCommands.placeItem(unpack(command.args))
+			elseif command.name == "dumpItems" then
+				turtleCommands.dumpItems(unpack(command.args))
+			elseif command.name == "depositAllOfType" then
+				turtleCommands.depositAllOfType(unpack(command.args))
+			elseif command.name == "sort" then
+				turtleCommands.sort(unpack(command.args))
+			elseif command.name == "sortAll" then 
+				turtleCommands.sortAll(unpack(command.args))
+			elseif command.name == "collect" then
+				turtleCommands.collect(unpack(command.args))
+			elseif command.name == "collectItem" then
+				turtleCommands.collectItem(unpack(command.args))
+			elseif command.name == "redstoneOutput" then
+				turtleCommands.redstoneOutput(unpack(command.args))
+			elseif command.name == "message" then
+				rednet.send(server, command.args[1], "storageTurtleMessage")
+			elseif command.name == "delay" then
+				os.sleep(command.args[1])
+			else
+				completed = false
+			end
+		end
+		
+		--respond to the server with the results
+		rednet.send(server, completed, "storageTurtleResponse")
+		if completed then
+			print ("Job complete!")
+		else
+			print("Job failed.")
+		end
+	end
+end
+main()
