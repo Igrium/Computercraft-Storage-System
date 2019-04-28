@@ -25,6 +25,9 @@ function dumpItems(chest)
 	if navigation.navigate(chest.coordinates.x, chest.coordinates.y, chest.coordinates.z) then
 		navigation.faceDirection(chest.direction)
 		item.dump()
+		return true
+	else
+		return false
 	end
 end
 

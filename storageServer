@@ -1,0 +1,84 @@
+-- Main code run by central storage server. Send it a task with the storageRequest protocol.
+os.loadAPI("config")
+os.loadAPI("network")
+os.loadAPI("inventory")
+os.loadAPI("database")
+os.loadAPI("turtleCommand")
+-- Tasks
+
+-- Collects all items and deposits them in the user chest or the farm deposit chest. Takes ItemRequest objects: (['item']=item, ['count'] = count)
+function collect(items, chest)
+	-- Check formatting
+	if items == nil
+		return 05
+	end
+	
+	if chest == nil
+		chest = database.getStorageArrangement().userChest
+	end
+	
+	-- If chest is still nil, there must have been a database error.
+	if chest == nil
+		return 06
+	end
+	
+	-- Filter out the items the storage system doesn't contain
+	local itemsContained = {}
+	for  k, v in pairs(items) do
+		if database.getItemLocations(v.item) > 0 then
+			itemsContained[#itemsContained+1] = v
+		end
+	end
+	
+	-- Filter out the items that are out of stock
+	local itemsStocked = {}
+	for  k, v in pairs(itemsContained) do
+		if database.getFilledItemLocations(v.item) > 0 then
+			itemsStocked[#itemsStocked+1] = v
+		end
+	end
+	
+	-- Build command stack
+	local commands = {}
+	for k, v in pairs(itemsStocked) do
+		commands[#commands+1] = turtleCommand.new("collectItem", v.item, v.count)
+	end
+	
+	commands[#commands+1] = turtleCommand.new("dumpItems", chest)
+	
+	-- Send to turtle
+	rednet.send(config.turtleID, commands, "storageTurtle")
+	local turtleSuccess = rednet.receive("storageTurtleResponse", 60)
+	
+	-- Return the right code
+	if not turtleSuccess then
+		return 3
+	elseif #itemsContained < #items then
+		return 2
+	elseif #itemsStocked < #items then
+		return 1
+	else
+		return 0
+	end
+end
+
+function main()
+	if os.getComputerID() ~= config.serverID then
+		print("Computer is not the server in config. Can't run config code.")
+		return
+	end
+	
+	network.setupNetwork()
+	
+	local task = nil
+	local client = nil
+	
+	while true do
+		client, task = rednet.receive("storageRequest")
+		
+		if task.name = "collect"
+			rednet.send(client, collect(task.args))
+		
+	end
+	
+end

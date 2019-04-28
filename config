@@ -1,8 +1,5 @@
 -- Configures settings that identifies computer in the system
 
--- turtle, server
-role = "turtle"
-
 -- The side to attempt to 
 rednetSide = "left"
 

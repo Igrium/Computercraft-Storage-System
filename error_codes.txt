@@ -1,0 +1,6 @@
+00: Success
+01: Storage system is out of stock for 1 or more item
+02: Storage system doesn't contain 1 or more item
+03: Turtle error
+05: Improperly formatted request
+06: Database error

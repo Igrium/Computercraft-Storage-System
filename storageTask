@@ -1,0 +1,5 @@
+-- Task object for the storage server
+
+function new(name, ...)
+	return {['name']=name, ['args']=arg}
+end
