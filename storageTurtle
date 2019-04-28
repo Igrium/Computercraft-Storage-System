@@ -35,9 +35,7 @@ function main()
 				turtleCommands.dumpItems(unpack(command.args))
 			elseif command.name == "depositAllOfType" then
 				turtleCommands.depositAllOfType(unpack(command.args))
-			elseif command.name == "sort" then
-				turtleCommands.sort(unpack(command.args))
-			elseif command.name == "sortAll" then 
+			elseif command.name == "sort" then 
 				turtleCommands.sortAll(unpack(command.args))
 			elseif command.name == "collect" then
 				turtleCommands.collect(unpack(command.args))

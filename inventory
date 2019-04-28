@@ -62,13 +62,15 @@ function inventoryServer(printOutput)
 	
 	local requester = nil
 	local chestID = nil
+	local percentage = 0
 	
 	-- Main loop
 	while true do	
 		requester, chestID = rednet.receive("inventoryQuery")
+		percentage = getPercentage(chestID)
 		if printOutput then
-			print("Serving inventory request "..chestID.." from computer "..requester)
+			print("Serving inventory request "..chestID.." from computer "..requester..". ("..percentage..")")
 		end
-		rednet.send(requester, getPercentage(chestID), "inventoryResponse")
+		rednet.send(requester, percentage, "inventoryResponse")
 	end
 end

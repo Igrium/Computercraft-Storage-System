@@ -76,3 +76,24 @@ function getLowestOpenSlot()
 	end
 	return "full"
 end
+
+-- Are two items the same?
+function equals(item1, item2)
+	return (not (item1 == nil or item2 == nil)) and item1.name == item2.name and item1.damage == item2.damage
+end
+
+-- Select an item in the inventory
+function selectItem(itemInfo)
+	if equals(turtle.getItemDetail(), itemInfo) then
+		return true
+	end
+	
+	for i=1,16,1 do
+		turtle.select(i)
+		if equals(turtle.getItemDetail(), itemInfo) then
+			return true
+		end
+	end 
+	
+	return false
+end
