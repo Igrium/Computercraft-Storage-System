@@ -39,19 +39,6 @@ function depositAllOfType(itemInfo, chest)
 	end
 end
 
--- Returns how many of an item type it has
-function tallyItems(itemInfo)
-	local items = 0
-	
-	for i=1,16,1 do
-		if item.equals(turtle.getItemDetail(i), itemInfo) then
-			items = items + turtle.getItemCount(i)
-		end
-	end
-	
-	return items
-end
-
 -- Deposits the item in the selected slot to it's appropriate chest. Boolean [all]: deposit all items of type into chest
 function sort(all)
 	if turtle.getItemDetail() == nil then
@@ -70,7 +57,7 @@ function sort(all)
 	local count = 0
 	
 	if all then
-		count = tallyItems(itemInfo)
+		count = item.tally(itemInfo)
 	else
 		count = turtle.getItemCount()
 	end
@@ -104,7 +91,7 @@ function sort(all)
 	end
 	
 	--Handle situation where not a full stack was dropped
-	if all and tallyItems(itemInfo) > 0 then
+	if all and item.tally(itemInfo) > 0 then
 		item.selectItem(itemInfo)
 		return sort(true)
 	elseif (not all) and  turtle.getItemCount() > 0 then
@@ -167,15 +154,26 @@ function collect(chest, amount, slot)
 end
 
 -- Collect a certian item
-function collectItem(itemInfo, amount, slot)
+function collectItem(itemInfo, amount)
 	local chests = database.getFilledItemLocations(itemInfo, amount)
+	
+	local originalAmount = item.tally(itemInfo)
 	
 	if #chests == 0 or chests == nil then
 		print(itemInfo['name'].." is not in the storage system!")
 		return false
 	end
 	
-	return collect(chests[1], amount, slot)
+	collect(chests[1], amount)
+	
+	-- Make sure we got the items
+	local newAmount = item.tally(itemInfo)
+	if math.abs(newAmount - originalAmount) < amount then
+		return collectItem(itemInfo, math.abs(newAmount - originalAmount))
+	else
+		return true
+	end
+	
 end
 
 -- Outputs a pulse of redstone at a given side

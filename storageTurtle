@@ -40,7 +40,7 @@ function main()
 			elseif command.name == "collect" then
 				turtleCommands.collect(unpack(command.args))
 			elseif command.name == "collectItem" then
-				turtleCommands.z(unpack(command.args))
+				turtleCommands.collectItem(unpack(command.args))
 			elseif command.name == "redstoneOutput" then
 				turtleCommands.redstoneOutput(unpack(command.args))
 			elseif command.name == "message" then

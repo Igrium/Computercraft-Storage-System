@@ -7,10 +7,10 @@ rednetSide = "left"
 turtleID = 8
 
 -- Computer ID of the central storage server. Only used when computer must contact server on it's own accord (ex. turtle refueling.)
-serverID = 10
+serverID = 13
 
 -- Computer ID of the computer holding the database. Usually the central server.
-databaseID = serverID
+databaseID = 10
 
 -- ID of the inventory server
 inventoryServerID = 21

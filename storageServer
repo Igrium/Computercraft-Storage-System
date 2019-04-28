@@ -6,26 +6,27 @@ os.loadAPI("database")
 os.loadAPI("turtleCommand")
 -- Tasks
 
--- Collects all items and deposits them in the user chest or the farm deposit chest. Takes ItemRequest objects: (['item']=item, ['count'] = count)
+-- Collects all items and deposits them in the user chest or the farm deposit chest. Takes ItemRequest objects: {['item']=item, ['count'] = count}
 function collect(items, chest)
 	-- Check formatting
-	if items == nil
+	if items == nil then
 		return 05
 	end
 	
-	if chest == nil
+	if chest == nil then
 		chest = database.getStorageArrangement().userChest
 	end
 	
 	-- If chest is still nil, there must have been a database error.
-	if chest == nil
+	if chest == nil then
 		return 06
 	end
+	
 	
 	-- Filter out the items the storage system doesn't contain
 	local itemsContained = {}
 	for  k, v in pairs(items) do
-		if database.getItemLocations(v.item) > 0 then
+		if #database.getItemLocations(v.item) > 0 then
 			itemsContained[#itemsContained+1] = v
 		end
 	end
@@ -33,7 +34,7 @@ function collect(items, chest)
 	-- Filter out the items that are out of stock
 	local itemsStocked = {}
 	for  k, v in pairs(itemsContained) do
-		if database.getFilledItemLocations(v.item) > 0 then
+		if #database.getFilledItemLocations(v.item, v.count) > 0 then
 			itemsStocked[#itemsStocked+1] = v
 		end
 	end
@@ -41,7 +42,7 @@ function collect(items, chest)
 	-- Build command stack
 	local commands = {}
 	for k, v in pairs(itemsStocked) do
-		commands[#commands+1] = turtleCommand.new("collectItem", v.item, v.count)
+		commands[#commands+1]  = turtleCommand.new("collectItem", v.item, v.count)
 	end
 	
 	commands[#commands+1] = turtleCommand.new("dumpItems", chest)
@@ -74,11 +75,19 @@ function main()
 	local client = nil
 	
 	while true do
+		print("Waiting for task...")
 		client, task = rednet.receive("storageRequest")
+		rednet.send(client, true, "storageConfirmation") 
+		print("Recieved task from computer "..client)
 		
-		if task.name = "collect"
-			rednet.send(client, collect(task.args))
+		if task.name == "collect" then
+			rednet.send(client, collect(unpack(task.args)), "storageResponse")
+		else
+			rednet.send(client, 05, "storageResponse")
+		end
 		
 	end
 	
 end
+
+main()

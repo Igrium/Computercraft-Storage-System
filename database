@@ -84,7 +84,6 @@ function getFilledItemLocations(item, amount)
 	
 	-- If item description matches, add chest to locations table
 	for k, v in pairs(totalLocations) do
-		print(k, v.itemInfo.name)
 		if v.itemInfo.name == item.name and v.itemInfo.damage == item.damage and (inventory.getPercentage(k) * 54) > (amount / 54) then
 			locations[#locations+1] = v
 		end
@@ -100,7 +99,6 @@ locations = {}
 	
 	-- If item description matches, add chest to locations table
 	for k, v in pairs(totalLocations) do
-		print(k, v.itemInfo.name)
 		if v.itemInfo.name == item.name and v.itemInfo.damage == item.damage and ((1 - inventory.getPercentage(k)) * 54) > (amount / 54) then
 			locations[#locations+1] = v
 		end
