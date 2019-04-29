@@ -90,7 +90,7 @@ function fetch(items, chest)
 	end
 end
 
-function ship(items)
+function ship(items, destination)
 	-- Check formatting
 	if items == nil then
 		return 05
@@ -113,6 +113,9 @@ function ship(items)
 	local itemSuccess = collectAndDump(commands, items, chest)
 	
 	commands[#commands+1] = turtleCommand.new("redstoneOutput", "front", 1)
+	
+	-- Set shipping destination
+	rednet.send(config.shippingServerID, destination, "shippingTrack")
 	
 	-- Send to turtle
 	sendCommands(commands)
