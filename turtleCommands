@@ -178,12 +178,43 @@ function collectItem(itemInfo, amount)
 	
 end
 
+-- Collect as many items as possible from a chest
+function collectALl(chest)
+	navigate(chest.coordinates, chest.direction)
+	for i=1,16,1 do
+		turtle.select(i)
+		turtle.suck()
+	end
+	
+end
 -- Outputs a pulse of redstone at a given side
 function redstoneOutput(side, length)
 	redstone.setOutput(side, true)
 	os.sleep(length)
 	redstone.setOutput(side, false)
 end
+
+-- Checks to see if there's items in a chest by navigating to it and attempting to suck
+function checkChest(chest)
+	-- Doesn't work if something's in slot 16
+	if turtle.getItemCount(16) > 0 then
+		return
+	end
+	
+	local slot = turtle.getSelectedSlot()
+	
+	navigate(chest.coordinates, chest.direction)
+	turtle.select(16)
+	turtle.suck()
+	
+	local result = turtle.getItemCount() > 0
+	
+	turtle.drop()
+	turtle.select(slot)
+	return result
+end
+	
+	
 
 function main()
 	network.setupNetwork()

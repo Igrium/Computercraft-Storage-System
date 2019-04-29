@@ -35,18 +35,22 @@ function main()
 				turtleCommands.dumpItems(unpack(command.args))
 			elseif command.name == "depositAllOfType" then
 				turtleCommands.depositAllOfType(unpack(command.args))
-			elseif command.name == "sort" then 
+			elseif command.name == "sortAll" then 
 				turtleCommands.sortAll(unpack(command.args))
 			elseif command.name == "collect" then
 				turtleCommands.collect(unpack(command.args))
 			elseif command.name == "collectItem" then
 				turtleCommands.collectItem(unpack(command.args))
+			elseif command.name == "collectAll" then
+				turtleCommands.collectALl(unpack(command.args))
 			elseif command.name == "redstoneOutput" then
 				turtleCommands.redstoneOutput(unpack(command.args))
 			elseif command.name == "message" then
 				rednet.send(server, command.args[1], "storageTurtleMessage")
 			elseif command.name == "delay" then
 				os.sleep(command.args[1])
+			elseif command.name == "checkChest" then
+				rednet.send(server, turtleCommands.checkChest(unpack(command.args)), "storageTurtleMessage")
 			else
 				completed = false
 			end

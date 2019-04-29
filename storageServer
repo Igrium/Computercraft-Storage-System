@@ -5,6 +5,13 @@ os.loadAPI("inventory")
 os.loadAPI("database")
 os.loadAPI("turtleCommand")
 
+-- Helper functions
+
+-- Sends commands to turtle
+function sendCommands(commands)
+	rednet.send(config.turtleID, commands, "storageTurtle")
+end
+
 -- Command bundles
 
 -- Collects all the ItemRequest objects 
@@ -70,7 +77,7 @@ function fetch(items, chest)
 	collectAndDump(commands, items, chest)
 	
 	-- Send to turtle
-	rednet.send(config.turtleID, commands, "storageTurtle")
+	sendCommands(commands)
 	local turtleSuccess = rednet.receive("storageTurtleResponse", 60)
 	
 	-- Return the right code
@@ -101,14 +108,14 @@ function ship(items)
 	
 	-- Build command stack
 	commands[1] = turtleCommand.new("navigate", chest.coordinates)
-	commands[2] = turtleCommand.new("redstoneOutput", "bottom", .1)
+	commands[2] = turtleCommand.new("redstoneOutput", "bottom", .25)
 	
 	local itemSuccess = collectAndDump(commands, items, chest)
 	
-	commands[#commands+1] = turtleCommand.new("redstoneOutput", "front", 2)
+	commands[#commands+1] = turtleCommand.new("redstoneOutput", "front", 1)
 	
 	-- Send to turtle
-	rednet.send(config.turtleID, commands, "storageTurtle")
+	sendCommands(commands)
 	local turtleSuccess = rednet.receive("storageTurtleResponse", 60)
 	
 	-- Return the right code
@@ -121,6 +128,52 @@ function ship(items)
 	end
 end
 
+-- Take items from a chest and sort them into the storage system
+function sort(isShippment, chest)
+	if chest == nil then
+		print("Invalid chest")
+		return 06
+	end
+	
+	backupChest = database.getStorageArrangement()['backupChest']
+	if backupChest == nil then
+		print("Invalid backup chest")
+		return 06
+	end
+	
+	commands = {}
+	
+	commands[1] = turtleCommand.new("collectAll", chest)
+	commands[2] = turtleCommand.new("sortAll", backupChest)
+	commands[3] = turtleCommand.new("checkChest", chest)
+	
+	sendCommands(commands)
+	
+	-- Turtle will send info about whether the chest is still full. This also acts as our wait for the turtle to finish.
+	local chestFull = select(2, rednet.receive("storageTurtleMessage", 120))
+	if chestFull == nil then
+		return 03
+	end
+	
+	local errorCode = 0
+	-- If the chest still has items, we need to run the task again.
+	if chestFull then
+		errorCode = sort(isShippment, chest)
+	elseif isShippment then
+		sendCommands({turtleCommand.new("redstoneOutput", "front", 1)})
+	end
+	
+	return errorCode
+end
+
+-- Sort items from the user chest
+function sortUser()
+	return sort(false, database.getStorageArrangement()['userChest'])
+end
+
+function sortShipment()
+	return sort(true, database.getStorageArrangement()['shipmentIntake'])
+end
 
 function main()
 	if os.getComputerID() ~= config.serverID then
@@ -143,6 +196,10 @@ function main()
 			rednet.send(client, fetch(unpack(task.args)), "storageResponse")
 		elseif task.name == "ship" then
 			rednet.send(client, ship(unpack(task.args)), "storageResponse")
+		elseif task.name == "sortUser" then
+			rednet.send(client, sortUser(), "storageResponse")
+		elseif task.name == "sortShipment" then
+			rednet.send(client, sortShipment(), "storageResponse")
 		else
 			rednet.send(client, 05, "storageResponse")
 		end
