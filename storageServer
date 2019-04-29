@@ -4,25 +4,11 @@ os.loadAPI("network")
 os.loadAPI("inventory")
 os.loadAPI("database")
 os.loadAPI("turtleCommand")
--- Tasks
 
--- Collects all items and deposits them in the user chest or the farm deposit chest. Takes ItemRequest objects: {['item']=item, ['count'] = count}
-function collect(items, chest)
-	-- Check formatting
-	if items == nil then
-		return 05
-	end
-	
-	if chest == nil then
-		chest = database.getStorageArrangement().userChest
-	end
-	
-	-- If chest is still nil, there must have been a database error.
-	if chest == nil then
-		return 06
-	end
-	
-	
+-- Command bundles
+
+-- Collects all the ItemRequest objects 
+function collect(commands, items)
 	-- Filter out the items the storage system doesn't contain
 	local itemsContained = {}
 	for  k, v in pairs(items) do
@@ -40,12 +26,48 @@ function collect(items, chest)
 	end
 	
 	-- Build command stack
-	local commands = {}
 	for k, v in pairs(itemsStocked) do
 		commands[#commands+1]  = turtleCommand.new("collectItem", v.item, v.count)
 	end
 	
+	if #itemsContained < #items then
+		return 2
+	elseif #itemsStocked < #items then
+		return 1
+	else
+		return 0
+	end
+end
+
+function collectAndDump(commands, items, chest)
+	local itemSuccess = collect(commands, items)
 	commands[#commands+1] = turtleCommand.new("dumpItems", chest)
+	return itemSuccess
+end
+
+
+-- Tasks
+
+-- Collects all items and deposits them in the user chest or the farm deposit chest. Takes ItemRequest objects: {['item']=item, ['count'] = count}
+function fetch(items, chest)
+	-- Check formatting
+	if items == nil then
+		return 05
+	end
+	
+	if chest == nil then
+		chest = database.getStorageArrangement().userChest
+	end
+	
+	-- If chest is still nil, there must have been a database error.
+	if chest == nil then
+		return 06
+	end
+	
+	local commands = {}
+	
+	-- Build command stack
+	collectAndDump(commands, items, chest)
 	
 	-- Send to turtle
 	rednet.send(config.turtleID, commands, "storageTurtle")
@@ -54,14 +76,51 @@ function collect(items, chest)
 	-- Return the right code
 	if not turtleSuccess then
 		return 3
-	elseif #itemsContained < #items then
-		return 2
-	elseif #itemsStocked < #items then
-		return 1
+	elseif itemSuccess ~= 0 then
+		return itemSuccess
 	else
 		return 0
 	end
 end
+
+function ship(items)
+	-- Check formatting
+	if items == nil then
+		return 05
+	end
+	
+	local chest = database.getStorageArrangement().shipping
+	print(chest)
+	
+	-- If chest is nil, there must have been a database error.
+	if chest == nil then
+		return 06
+	end
+	
+	local commands = {}
+	
+	-- Build command stack
+	commands[1] = turtleCommand.new("navigate", chest.coordinates)
+	commands[2] = turtleCommand.new("redstoneOutput", "bottom", .1)
+	
+	local itemSuccess = collectAndDump(commands, items, chest)
+	
+	commands[#commands+1] = turtleCommand.new("redstoneOutput", "front", 2)
+	
+	-- Send to turtle
+	rednet.send(config.turtleID, commands, "storageTurtle")
+	local turtleSuccess = rednet.receive("storageTurtleResponse", 60)
+	
+	-- Return the right code
+	if not turtleSuccess then
+		return 3
+	elseif itemSuccess ~= 0 then
+		return itemSuccess
+	else
+		return 0
+	end
+end
+
 
 function main()
 	if os.getComputerID() ~= config.serverID then
@@ -80,8 +139,10 @@ function main()
 		rednet.send(client, true, "storageConfirmation") 
 		print("Recieved task from computer "..client)
 		
-		if task.name == "collect" then
-			rednet.send(client, collect(unpack(task.args)), "storageResponse")
+		if task.name == "fetch" then
+			rednet.send(client, fetch(unpack(task.args)), "storageResponse")
+		elseif task.name == "ship" then
+			rednet.send(client, ship(unpack(task.args)), "storageResponse")
 		else
 			rednet.send(client, 05, "storageResponse")
 		end

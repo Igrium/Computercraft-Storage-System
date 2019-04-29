@@ -9,7 +9,9 @@ os.loadAPI("network")
 -- Navigate and face a direction. Takes a vector and a string
 function navigate(destination, direction)
 	navigation.navigate(destination.x, destination.y, destination.z)
-	navigation.faceDirection(direction)
+	if direction ~= nil then
+		navigation.faceDirection(direction)
+	end
 end
 
 -- Place selected item in given chest, regardless of chest item type
