@@ -1,0 +1,20 @@
+-- Shipping server is responsible for making sure a shipment gets sent to the right place. Contact with "shippingTrack" protocol sending the desired track.
+
+trackNetworkSide = "left"
+mainNetworkSide = "right"
+
+rednet.open(trackNetworkSide)
+rednet.open(mainNetworkSide)
+
+track = nil
+while true do
+	track = select(2, rednet.receive("shippingTrack"))
+	
+	-- Disable communication to main network as to not spam with broadcast
+	rednet.close(mainNetworkSide)
+	
+	rednet.broadcast({track='all', state='off'}, "trackSwitch")
+	rednet.broadcast({track=track, state='on'}, "trackSwitch")
+	
+	rednet.open(mainNetworkSide)
+end

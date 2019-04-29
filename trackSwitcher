@@ -1,0 +1,32 @@
+-- Simple program that handles track switching for shipping. Uses the trackSwitch protocol, recieving a string for whether it should be on or off
+os.loadAPI("config")
+
+states = {['on']=true, ['off']=false}
+order = nil
+
+-- Get all modems enabled
+function setupNetwork()
+	local present = false
+	for _, side in pairs(rs.getSides()) do
+		if peripheral.getType(side) == "modem" then
+			present = true
+			rednet.open(side) -- this or wrap to a modem object if you're planning to use the modem API instead of rednet
+		end
+	end
+	if not present then
+		print("A modem was not found, please attach one and re-run this program")
+	end
+	
+	return present;
+end
+
+setupNetwork()
+
+while true do
+	order = select(2, rednet.receive("trackSwitch"))
+	if order.track == config.track or order.track == "all" then
+		print("Switching track "..order.state)
+		redstone.setOutput("top", states[order.state])
+	end
+end
+	
