@@ -1,0 +1,20 @@
+-- Script that installs the inventory monitor software onto a given computer (disk directory must be disk/)
+
+print("Enter the ID of the left chest.")
+local left = read()
+
+print("Enter the ID of the right chest.")
+local right = read()
+
+-- Write config
+print("Writing config")
+local config = fs.open("config", "w")
+config.writeLine("left='"..left.."'")
+config.writeLine("right='"..right.."'")
+config.close()
+
+-- Copy monitor code
+print("Downloading code")
+fs.copy("disk/inventoryMonitor", "startup")
+
+print("Setup finished. Run 'startup' to activate.")
