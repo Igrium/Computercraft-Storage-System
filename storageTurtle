@@ -7,6 +7,42 @@ os.loadAPI("navigation")
 os.loadAPI("turtleCommands")
 os.loadAPI("turtleCommand")
 
+function executeCommands(commands)
+	local completed = true
+	for i=1,#commands,1 do
+		-- Execute the commands
+		command = commands[i]
+		if command.name == "navigate" then
+			turtleCommands.navigate(unpack(command.args))
+		elseif command.name == "placeItem" then
+			turtleCommands.placeItem(unpack(command.args))
+		elseif command.name == "dumpItems" then
+			turtleCommands.dumpItems(unpack(command.args))
+		elseif command.name == "depositAllOfType" then
+			turtleCommands.depositAllOfType(unpack(command.args))
+		elseif command.name == "sortAll" then 
+			turtleCommands.sortAll(unpack(command.args))
+		elseif command.name == "collect" then
+			turtleCommands.collect(unpack(command.args))
+		elseif command.name == "collectItem" then
+			turtleCommands.collectItem(unpack(command.args))
+		elseif command.name == "collectAll" then
+			turtleCommands.collectALl(unpack(command.args))
+		elseif command.name == "redstoneOutput" then
+			turtleCommands.redstoneOutput(unpack(command.args))
+		elseif command.name == "message" then
+			rednet.send(server, command.args[1], "storageTurtleMessage")
+		elseif command.name == "delay" then
+			os.sleep(command.args[1])
+		elseif command.name == "checkChest" then
+			rednet.send(server, turtleCommands.checkChest(unpack(command.args)), "storageTurtleMessage")
+		else
+			completed = false
+		end
+	end
+	return completed
+end
+
 function main()
 	-- Initial setup
 	print("Starting storage turtle")
@@ -15,7 +51,8 @@ function main()
 	
 	local commands = nil
 	local server = nil
-	local completed = false
+	local returnValue = false
+	local codeError = false
 	
 	while true do
 		print("Looking for job...")
@@ -24,44 +61,18 @@ function main()
 		
 		print ("Recieved "..#commands.." commands from computer "..server)
 		
-		for i=1,#commands,1 do
-			-- Execute the commands
-			command = commands[i]
-			if command.name == "navigate" then
-				turtleCommands.navigate(unpack(command.args))
-			elseif command.name == "placeItem" then
-				turtleCommands.placeItem(unpack(command.args))
-			elseif command.name == "dumpItems" then
-				turtleCommands.dumpItems(unpack(command.args))
-			elseif command.name == "depositAllOfType" then
-				turtleCommands.depositAllOfType(unpack(command.args))
-			elseif command.name == "sortAll" then 
-				turtleCommands.sortAll(unpack(command.args))
-			elseif command.name == "collect" then
-				turtleCommands.collect(unpack(command.args))
-			elseif command.name == "collectItem" then
-				turtleCommands.collectItem(unpack(command.args))
-			elseif command.name == "collectAll" then
-				turtleCommands.collectALl(unpack(command.args))
-			elseif command.name == "redstoneOutput" then
-				turtleCommands.redstoneOutput(unpack(command.args))
-			elseif command.name == "message" then
-				rednet.send(server, command.args[1], "storageTurtleMessage")
-			elseif command.name == "delay" then
-				os.sleep(command.args[1])
-			elseif command.name == "checkChest" then
-				rednet.send(server, turtleCommands.checkChest(unpack(command.args)), "storageTurtleMessage")
-			else
-				completed = false
-			end
-		end
-		
-		--respond to the server with the results
-		rednet.send(server, completed, "storageTurtleResponse")
-		if completed then
-			print ("Job complete!")
-		else
+		-- Arguements may not be properly formatted from client, so we run with precautions
+		codeError, returnValue = pcall(function() executeCommands(commands) end)
+		if codeError then 
+			rednet.send(server, false, "storageTurtleResponse")
 			print("Job failed.")
+		else
+			rednet.send(server, returnValue, "storageTurtleResponse")
+			if returnValue then
+				print("Job complete!")
+			else
+				print("Job failed.")
+			end
 		end
 	end
 end
