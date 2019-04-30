@@ -5,6 +5,9 @@ os.loadAPI("inventory")
 os.loadAPI("database")
 os.loadAPI("turtleCommand")
 
+-- Global variables
+taskOrders = {}
+
 -- Helper functions
 
 -- Sends commands to turtle
@@ -178,6 +181,42 @@ function sortShipment()
 	return sort(true, database.getStorageArrangement()['shipmentIntake'])
 end
 
+function parseTask(task, client)
+	if task.name == "fetch" then
+			rednet.send(client, fetch(unpack(task.args)), "storageResponse")
+	elseif task.name == "ship" then
+		rednet.send(client, ship(unpack(task.args)), "storageResponse")
+	elseif task.name == "sortUser" then
+		rednet.send(client, sortUser(), "storageResponse")
+	elseif task.name == "sortShipment" then
+		rednet.send(client, sortShipment(), "storageResponse")
+	else
+		rednet.send(client, 05, "storageResponse")
+	end
+end
+
+-- Parses the first task in the queue
+function parseTaskFromQueue()
+	local success = parseTask(taskOrders[1].task, taskOrders[1].client)
+	table.remove(taskOrders, 1)
+end
+
+-- Wait for task and add to then end of the queue
+function getTask()
+	local client
+	local task
+	client, task = rednet.receive("storageRequest")
+	print("Recieved task "..task.name.." from computer "..client)
+	return {['client']=client, ['task']=task}
+end
+
+-- Run in paralell with parseTask() to continue finding tasks while it is active. Never returns.
+function getTasks()
+	while true do
+		taskOrders[#taskOrders+1] = getTask()
+	end
+end
+
 function main()
 	if os.getComputerID() ~= config.serverID then
 		print("Computer is not the server in config. Can't run config code.")
@@ -186,27 +225,15 @@ function main()
 	
 	network.setupNetwork()
 	
-	local task = nil
-	local client = nil
-	
 	while true do
-		print("Waiting for task...")
-		client, task = rednet.receive("storageRequest")
-		rednet.send(client, true, "storageConfirmation") 
-		print("Recieved task from computer "..client)
-		
-		if task.name == "fetch" then
-			rednet.send(client, fetch(unpack(task.args)), "storageResponse")
-		elseif task.name == "ship" then
-			rednet.send(client, ship(unpack(task.args)), "storageResponse")
-		elseif task.name == "sortUser" then
-			rednet.send(client, sortUser(), "storageResponse")
-		elseif task.name == "sortShipment" then
-			rednet.send(client, sortShipment(), "storageResponse")
-		else
-			rednet.send(client, 05, "storageResponse")
+		-- Make sure there is a task
+		if #taskOrders == 0 then
+			print("Waiting for task...")
+			taskOrders[1] = getTask()
 		end
 		
+		-- Execute task and look for others
+		parallel.waitForAny(parseTaskFromQueue, getTasks)
 	end
 	
 end
