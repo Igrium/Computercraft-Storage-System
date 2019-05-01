@@ -84,7 +84,7 @@ function sort(all)
 		return false
 	end
 	
-	local chest = chests[1]
+	local chest = navigation.getClosestChest(chests)
 	
 	if all then
 		depositAllOfType(itemInfo, chest)
@@ -166,7 +166,9 @@ function collectItem(itemInfo, amount)
 		return false
 	end
 	
-	collect(chests[1], amount)
+	collect(navigation.getClosestChest(chests), amount)
+	print("test")
+	--collect(chests[1], amount)
 	
 	-- Make sure we got the items
 	local newAmount = item.tally(itemInfo)

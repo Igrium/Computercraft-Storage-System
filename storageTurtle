@@ -65,6 +65,7 @@ function main()
 		codeError, returnValue = pcall(function() executeCommands(commands) end)
 		if codeError then 
 			rednet.send(server, false, "storageTurtleResponse")
+			print(returnValue)
 			print("Job failed.")
 		else
 			rednet.send(server, returnValue, "storageTurtleResponse")

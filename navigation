@@ -52,6 +52,26 @@ function refreshInfo()
 	roomExtents = database.getRoomExtents()
 end
 
+-- Gets the closest chest to the turtle's current location
+function getClosestChest(chests)
+	local minDistance = 1000
+	local minChest = nil
+	
+	local location = vector.new(gps.locate(3))
+	for k,chest in pairs(chests) do
+		local xDiff = math.abs(location.x - chest.coordinates.x)
+		local yDiff = math.abs(location.y - chest.coordinates.y)
+		local zDiff = math.abs(location.z - chest.coordinates.z)
+		local distance = math.sqrt(xDiff^2 + yDiff^2 + zDiff^2)
+		print("Got distance: "..distance)
+		if distance < minDistance then
+			minDistance = distance
+			minChest = chest
+		end
+	end
+	return minChest
+end
+
 -- Finds the nearsest value to 'number' in the given table
 local function nearestValue(table, number)
     local smallestSoFar, smallestIndex
