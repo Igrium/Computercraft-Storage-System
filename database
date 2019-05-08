@@ -122,6 +122,7 @@ end
 -- The main function for the database server
 function databaseServer(printOutput)
 	if not isDatabase() then
+		print("Computer is not the database in config. Can't run database code.")
 		return
 	end
 	

@@ -1,0 +1,50 @@
+-- A script that installs the system onto a computer
+
+-- All the required dependencies for a given component (excluding the config file)
+
+databaseDependencies = {"network", "chest", "inventory", "database"}
+inventoryDependencies = {"network", "database", "chest", "inventory"}
+serverDependencies = {"network", "inventory", "database",  "turtleCommand",  "chest", "storageServer"}
+turtleDependencies = {"network", "navigation", "database", "chest", "inventory", "turtleCommands",  "turtleCommand", "item", "storageTurtle"}
+
+diskPath = "disk/"
+
+-- Copys a file from the disk to the computer
+function copyFile(name)
+	if fs.exists(name) then
+		print("Updating '"..name.."'")
+		fs.delete(name)
+	else
+		print("Importing '"..name.."'")
+	end
+	fs.copy(fs.combine("disk/", name), name)
+end
+
+-- Get type of component
+print("This is a: server/database/turtle/inventory.")
+local componentType = read()
+
+copyFile("config")
+
+if componentType == "server" then
+	for k,v in pairs(serverDependencies) do
+		copyFile(v)
+	end
+elseif componentType == "turtle" then
+	for k,v in pairs(turtleDependencies) do
+		copyFile(v)
+	end
+elseif componentType == "database" then 
+	for k,v in pairs(databaseDependencies) do
+		copyFile(v)
+	end
+elseif componentType == "inventory" then
+	for k,v in pairs(inventoryDependencies) do
+		copyFile(v)
+	end
+else
+	print("Unknown component type: '"..componentType.."'")
+	error()
+end
+
+print("Installed "..componentType.." successfully.")

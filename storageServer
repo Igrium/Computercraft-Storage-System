@@ -219,7 +219,7 @@ end
 
 function main()
 	if os.getComputerID() ~= config.serverID then
-		print("Computer is not the server in config. Can't run config code.")
+		print("Computer is not the server in config. Can't run server code.")
 		return
 	end
 	
