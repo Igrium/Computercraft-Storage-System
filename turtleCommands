@@ -18,7 +18,7 @@ end
 function placeItem(chest, count)
 	if navigation.navigate(chest.coordinates.x, chest.coordinates.y, chest.coordinates.z) then
 		navigation.faceDirection(chest.direction)
-		turtle.drop(count)
+		item.dropStacks(count)
 	end
 end
 
@@ -61,7 +61,7 @@ function sort(all)
 	if all then
 		count = item.tally(itemInfo)
 	else
-		count = turtle.getItemCount()
+		count = item.getItemStacks()
 	end
 	
 	local chests = database.getAvailableItemLocations(itemInfo, count)
@@ -89,7 +89,7 @@ function sort(all)
 	if all then
 		depositAllOfType(itemInfo, chest)
 	else
-		placeItem(chest, turtle.getItemCount())
+		placeItem(chest, item.getItemStacks())
 	end
 	
 	--Handle situation where not a full stack was dropped
@@ -124,15 +124,15 @@ end
 -- Collect a number of items from a chest. Returns: success
 function collect(chest, amount, slot)
 	-- If there isn't enough space in the slot, divide into multiple slots
-	if amount > 64  then
+	if amount > 1  then
 		local success = true
-		for i=1,math.floor(amount/64),1 do
-			if not collect(chest,64) then
+		for i=1,math.floor(amount),1 do
+			if not collect(chest,1) then
 				success = false
 			end
 		end
 		-- Deal with remainder stack
-		local remainder = math.fmod(amount, 64)
+		local remainder = amount - math.floor(amount)
 		
 		-- Order of operations means collect isn't run if remainder = 0.
 		if remainder > 0 and not collect(chest, remainder) then
@@ -149,7 +149,7 @@ function collect(chest, amount, slot)
 	if navigation.navigate(chest.coordinates.x,chest.coordinates.y,chest.coordinates.z) then
 		navigation.faceDirection(chest.direction)
 		turtle.select(slot)
-		return turtle.suck(amount)
+		return item.suckStacks(amount)
 	else
 		return false
 	end

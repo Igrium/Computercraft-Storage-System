@@ -17,6 +17,18 @@ function dump()
 	return success
 end
 
+-- How many stacks of an item does a slot contain? (0-1)
+function getItemStacks(slot)
+	if slot == nil then
+		slot = turtle.getSelectedSlot()
+	end
+	
+	if turtle.getItemCount(slot) == 0 then
+		return 0
+	end
+	-- Return item count divided by stack size (calculated by adding item cound and item space) 
+	return turtle.getItemCount(slot) / (turtle.getItemCount(slot) + turtle.getItemSpace(slot))
+end
 -- Get the ID string and damage values from the items in the inventory in front of the turtle (requires a homogeneous inventory)
 function getInventoryItemInfo()
 
@@ -55,6 +67,18 @@ function depositAllOfType(itemInfo)
 	end
 	turtle.select(selectedSlot)
 	return success
+end
+
+-- Drops a certian amount of items based on percentage of a stack
+function dropStacks(count)
+	local stackSize = turtle.getItemCount() + turtle.getItemSpace()
+	turtle.drop(stackSize * count)
+end
+
+-- Sucks a certian amount of items based on percentage of a stack
+function suckStacks(count)
+	local stackSize = turtle.getItemCount() + turtle.getItemSpace()
+	turtle.suck(stackSize * count)
 end
 
 -- Does this turtle currently have any items
@@ -98,13 +122,13 @@ function selectItem(itemInfo)
 	return false
 end
 
--- Returns how many of an item type turtle has
+-- Returns how many stacks of an item type turtle has
 function tally(itemInfo)
 	local items = 0
 	
 	for i=1,16,1 do
 		if item.equals(turtle.getItemDetail(i), itemInfo) then
-			items = items + turtle.getItemCount(i)
+			items = items + item.getItemStacks(i)
 		end
 	end
 	

@@ -7,7 +7,7 @@ os.loadAPI("navigation")
 os.loadAPI("turtleCommands")
 os.loadAPI("turtleCommand")
 
-function executeCommands(commands)
+function executeCommands(commands, server)
 	local completed = true
 	for i=1,#commands,1 do
 		-- Execute the commands
@@ -62,7 +62,8 @@ function main()
 		print ("Recieved "..#commands.." commands from computer "..server)
 		
 		-- Arguements may not be properly formatted from client, so we run with precautions
-		codeError, returnValue = pcall(function() executeCommands(commands) end)
+		--executeCommands(commands, server)
+		codeError, returnValue = pcall(function() executeCommands(commands, server) end)
 		if codeError then 
 			rednet.send(server, false, "storageTurtleResponse")
 			print(returnValue)
