@@ -171,6 +171,10 @@ function faceDirection(newDirection)
 	direction = newDirection
 end
 
+function getDirection()
+	return direction
+end
+
 function turnLeft()
 	turtle.turnLeft()
 	-- Handle specific west-north scenareo

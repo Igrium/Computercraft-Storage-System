@@ -3,7 +3,7 @@
 -- Access the database directly with the "database" rednet protocol, and wait for a redmet message with the "dataRecieve" protocol.
 
 -- How long to wait for a response from the database
-timeoutseconds = 5
+timeoutseconds = 2
 
 os.loadAPI("config")
 os.loadAPI("chest")

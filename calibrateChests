@@ -1,0 +1,202 @@
+-- Self contained script that creates a storage arrangement database entry based on what's in the chests of the storage system
+os.loadAPI("chest")
+os.loadAPI("navigation")
+
+local arg = { ... }
+
+
+-- Returns a chest object of the chest turtle is right in front of
+function calibrateChest()
+	turtle.suck(1)
+	local itemInfo = turtle.getItemDetail()
+	
+	-- Default to a chest with nothing in it
+	if itemInfo == nil then
+		itemInfo = {name='none', damage=0}
+	end
+	
+	turtle.drop(1)
+	return chest.new(itemInfo, vector.new(gps.locate()), navigation.getDirection())
+end
+
+-- Calibrates a column of chests. Calculates left and right sides. Returns a table with the last character of the final chest keys as keys.
+function calibrateColumn(height)
+	local left = {}
+	local right = {}
+	
+	for i = 1,height,1 do
+		navigation.turnLeft()
+		
+		if select(2, turtle.inspect()).name == "minecraft:chest" then
+			left[i] = calibrateChest()
+		end
+		
+		navigation.turnRight()
+		navigation.turnRight()
+		
+		if select(2, turtle.inspect()).name == "minecraft:chest" then
+			right[i] = calibrateChest()
+		end
+		
+		navigation.turnLeft()
+		
+		if i < height then
+			turtle.up()
+		end
+	end
+	
+	for i = 1,height,1 do
+		turtle.down()
+	end
+	return left, right
+end
+
+-- Calibrate a row of chests. <length>: length of row in chests.
+function calibrateRow(length, height)
+	local letters = {'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'}
+	
+	if length > 26 then
+		error("Length of row must be less than 26")
+		return
+	end
+	
+	local left = {}
+	local right = {}
+	local currentColumn = 0
+	
+	-- For making the return trip
+	local blocksMoved = 0
+	
+	while currentColumn < length do
+		-- Check there is a column
+		local atColumn = false
+		navigation.turnLeft()
+		if select(2, turtle.inspect()).name == "minecraft:chest" then
+			atColumn = true
+			navigation.turnRight()
+		else
+			navigation.turnRight()
+			navigation.turnRight()
+			if select(2, turtle.inspect()).name == "minecraft:chest" then
+				atColumn = true
+			end
+			navigation.turnLeft()
+		end
+		
+		if atColumn then
+			currentColumn = currentColumn+1
+			
+			local leftColumn = nil
+			local rightColumn = nil
+			leftColumn, rightColumn = calibrateColumn(height)
+			
+			-- Add all chests to appropriate key in row table
+			for k,v in pairs(leftColumn) do
+				left[letters[currentColumn]..k] = v
+			end
+			
+			for k,v in pairs(rightColumn) do
+				right[letters[currentColumn]..k] = v
+			end
+			
+			-- Chests are double. Go forward by two.
+			turtle.forward()
+			blocksMoved = blocksMoved+1
+		end
+		turtle.forward()
+		blocksMoved = blocksMoved+1
+	end
+	-- Move back to start
+	for i  = 1,blocksMoved,1 do
+		turtle.back()
+	end
+	
+	return left, right
+	
+end
+
+-- Calibrate the entire storage system
+function calibrateChests(length, depth, height)
+	letters = {'A','B','C','D','E','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'}
+	
+	if length > 26 then
+		error("Length of storage system must be less than 26")
+		return
+	end
+
+	local chests = {}
+	
+	local left = nil
+	local right = nil
+	
+	-- Iterate through all the rows.
+	for i = 1,length,1 do
+		left, right = calibrateRow(depth, height)
+		
+		for k,v in pairs(left) do
+			chests[letters[2*i-1]..k] = v
+		end
+		
+		for k,v in pairs(right) do 
+			chests[letters[2*i]..k] = v
+		end
+		
+		-- Move to next row
+		if i < length then
+			navigation.turnRight()
+			for i =1,6,1 do
+				turtle.forward()
+			end
+			navigation.turnLeft()
+		end
+	end
+	
+	return chests
+end
+
+function main(length, depth, height)
+
+	if length == nil or depth == nil or height == nil then
+		print("Usage: calibrateChests <number of aisles> <aisle depth> <height>")
+		return
+	end
+	
+	local targetPath = "chestLocations"
+	
+	if fs.exists(targetPath) then
+		print("File already exists. Replace? (y/n)")
+		local response = read()
+		if response ~= 'y' then
+			return
+		else
+			fs.delete(targetPath)
+		end
+	end
+	
+	navigation.callibrate()
+	local chests = calibrateChests(length, length, length)
+	
+	-- Write to the file
+	
+	
+	file = fs.open("chests", 'w')
+	file.writeLine("os.loadAPI('chest')")
+	file.writeLine("chests = {")
+	
+	local linesWritten = 0
+	for k,v in pairs(chests) do
+		file.write("['"..k.."']=chest.new({['name']='"..v.itemInfo.name.."', ['damage']="..v.itemInfo.damage.."}, vector.new("..v.coordinates.x..","..v.coordinates.y..","..v.coordinates.z.."), "..v.direction.."')")
+		linesWritten = linesWritten + 1
+		
+		if linesWritten < #chests then
+			file.write(",\n")
+		else
+			file.write("}")
+		end
+	end
+	
+	file.close()
+	
+end
+
+main(tonumber(arg[1]), tonumber(arg[2]), tonumber(arg[3]))
