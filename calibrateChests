@@ -154,14 +154,17 @@ function calibrateChests(length, depth, height)
 	return chests
 end
 
-function main(length, depth, height)
+function main(length, depth, height, targetPath)
 
 	if length == nil or depth == nil or height == nil then
-		print("Usage: calibrateChests <number of aisles> <aisle depth> <height>")
+		print("Usage: calibrateChests <number of aisles> <aisle depth> <height> [output file]")
 		return
 	end
 	
-	local targetPath = "chestLocations"
+	
+	if targetPath == nil then
+		targetPath = "chests"
+	end
 	
 	if fs.exists(targetPath) then
 		print("File already exists. Replace? (y/n)")
@@ -173,22 +176,29 @@ function main(length, depth, height)
 		end
 	end
 	
+	print("Starting chest calibration...")
 	navigation.callibrate()
-	local chests = calibrateChests(length, length, length)
+	local chests = calibrateChests(length, depth, height)
 	
 	-- Write to the file
 	
 	
-	file = fs.open("chests", 'w')
+	file = fs.open(targetPath, 'w')
 	file.writeLine("os.loadAPI('chest')")
 	file.writeLine("chests = {")
 	
+	-- count chests
+	local numChests = 0
+	for k,v in pairs(chests) do
+		numChests = numChests + 1
+	end
+	
 	local linesWritten = 0
 	for k,v in pairs(chests) do
-		file.write("['"..k.."']=chest.new({['name']='"..v.itemInfo.name.."', ['damage']="..v.itemInfo.damage.."}, vector.new("..v.coordinates.x..","..v.coordinates.y..","..v.coordinates.z.."), "..v.direction.."')")
+		file.write("['"..k.."']=chest.new({['name']='"..v.itemInfo.name.."', ['damage']="..v.itemInfo.damage.."}, vector.new("..v.coordinates.x..","..v.coordinates.y..","..v.coordinates.z.."), '"..v.direction.."')")
 		linesWritten = linesWritten + 1
 		
-		if linesWritten < #chests then
+		if linesWritten < numChests then
 			file.write(",\n")
 		else
 			file.write("}")
@@ -196,7 +206,8 @@ function main(length, depth, height)
 	end
 	
 	file.close()
+	print("Calibration finished! Saved to "..targetPath)
 	
 end
 
-main(tonumber(arg[1]), tonumber(arg[2]), tonumber(arg[3]))
+main(tonumber(arg[1]), tonumber(arg[2]), tonumber(arg[3]), arg[4])
