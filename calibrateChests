@@ -176,6 +176,11 @@ function main(length, depth, height, targetPath)
 		end
 	end
 	
+	if gps.locate(3) == nil then
+		print("Unable to obtain gps signal")
+		return
+	end
+	
 	print("Starting chest calibration...")
 	navigation.callibrate()
 	local chests = calibrateChests(length, depth, height)
