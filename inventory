@@ -14,7 +14,14 @@ function getPercentage(chestID)
 	if isInventoryServer() then
 		rednet.broadcast(chestID, "inventoryRequest")
 		local percentage = select(2, rednet.receive("inventoryResponse", 5))
-		return percentage
+		
+		-- If percentage is nil, chest doesn't exist
+		if percentage == nil then
+			print("Chest "..chestID.." does not exist!")
+			return 0
+		else
+			return percentage
+		end
 	else
 		rednet.send(config.inventoryServerID, chestID, "inventoryQuery")
 		print("Requested chest "..chestID.." from "..config.inventoryServerID)
