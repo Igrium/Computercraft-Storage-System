@@ -2,6 +2,7 @@ os.loadAPI("config")
 os.loadAPI("database")
 os.loadAPI("storageTask")
 os.loadAPI("inventory")
+os.loadAPI("network")
 
 -- Sends a task to the server
 function sendTask(task)
@@ -88,4 +89,5 @@ function getItems()
 
 end
 
+network.setupNetwork()
 getItems()

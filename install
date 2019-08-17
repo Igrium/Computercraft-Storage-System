@@ -6,6 +6,7 @@ databaseDependencies = {"network", "chest", "inventory", "database"}
 inventoryDependencies = {"network", "database", "chest", "inventory"}
 serverDependencies = {"network", "inventory", "database",  "turtleCommand",  "chest", "storageServer"}
 turtleDependencies = {"network", "navigation", "database", "chest", "inventory", "turtleCommands",  "turtleCommand", "item", "storageTurtle"}
+clientDependencies = {"network", "database", "storageTask", "inventory", "chest", "client"}
 
 diskPath = "disk/"
 
@@ -21,7 +22,7 @@ function copyFile(name)
 end
 
 -- Get type of component
-print("This is a: server/database/turtle/inventory.")
+print("This is a: server/database/turtle/inventory/client.")
 local componentType = read()
 
 copyFile("config")
@@ -40,6 +41,10 @@ elseif componentType == "database" then
 	end
 elseif componentType == "inventory" then
 	for k,v in pairs(inventoryDependencies) do
+		copyFile(v)
+	end
+elseif componentType == "client" then
+	for k,v in pairs(clientDependencies) do
 		copyFile(v)
 	end
 else
