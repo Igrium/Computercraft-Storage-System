@@ -11,7 +11,7 @@ end
 
 -- Retrieves an ItemRequest from the storage system {['item']=item,['count']=count}
 function fetch(items)
-	local task = storageTask.new('fetch', items, database.getStorageArrangement()['userChest'])
+	local task = storageTask.new('fetch', items, database.getStorageArrangement()['outputChest'])
 	sendTask(task)
 end
 
