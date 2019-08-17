@@ -1,0 +1,91 @@
+os.loadAPI("config")
+os.loadAPI("database")
+os.loadAPI("storageTask")
+os.loadAPI("inventory")
+
+-- Sends a task to the server
+function sendTask(task)
+	rednet.send(config.serverID, task, "storageRequest")
+end
+
+-- Retrieves an ItemRequest from the storage system {['item']=item,['count']=count}
+function fetch(items)
+	local task = storageTask.new('fetch', items, database.getStorageArrangement()['userChest'])
+	sendTask(task)
+end
+
+-- Return a request in a readable format
+function requestToString(request)
+	return request.count.." stack(s) of "..request.item.name.." with damage value "..request.item.damage
+end
+
+-- High level function to add a request to the list of requests
+function addRequest(requests)
+	print("What is the name of the item you want? (ex: minecraft:stone)")
+	local name = read()
+	print("What is the damage value of the item you want?")
+	local damage = tonumber(read())
+	-- Assemble item object
+	local item = {name=name,damage=damage}
+		
+	-- Check the current stock of the storage system
+	local numChests = #database.getItemLocations(item)
+		
+	if numChests == 0 then 
+		print("The storage system does not have this item. Check the spelling and try again.")
+		return
+	end
+		
+	-- Get num of stacks in stock by multiplying item percentage by total slots (total chests * 54)
+	local stock = numChests*54*inventory.getItemPercentage(item)
+	
+	print("How many stacks of this item do you want?")
+	local requestedCount = tonumber(read())
+	
+	-- Make sure we have enough of the item
+	if requestedCount > stock then
+		print("There are only "..stock.." stacks of this item in stock. Do you want to take this amount? (y/n)")
+		local response = read()
+		if response == 'y' then
+			local request = {['item']=item,['count']=stock}
+		else
+			return
+		end
+	end
+	
+	local request = {['item']=item,['count']=requestedCount}
+	
+	-- Add request to list
+	requests[#requests+1] = request
+	
+	print("Added request for "..requestToString(request))
+end
+
+-- High level function to walk user through item request creation
+function getItems()
+	local requests = {}
+	
+	print("This will guide you though setting up an item request.")
+	
+	-- Do for all items the user wants
+	while true do
+		addRequest(requests)
+		print("Add more items? (y/n)")
+		local response = read()
+		
+		if response ~= 'y' then break end
+	end
+	
+	-- Confirm request
+	print("Your request is: ")
+	for i, request in ipairs(requests) do
+		print(requestToString(request))
+	end
+	
+	-- Send in request
+	fetch(requests)
+	print("Item request sent to the server. Please wait, then check the output chest for your items.")
+
+end
+
+getItems()
