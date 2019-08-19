@@ -117,7 +117,7 @@ end
 
 -- Calibrate the entire storage system
 function calibrateChests(length, depth, height)
-	letters = {'A','B','C','D','E','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'}
+	letters = {'A','B','C','D','E','G','F','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'}
 	
 	if length > 26 then
 		error("Length of storage system must be less than 26")
