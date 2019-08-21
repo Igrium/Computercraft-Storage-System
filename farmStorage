@@ -99,7 +99,3 @@ function requestShipment(items)
 	
 	return response
 end
-
-rednet.open("top")
-request = itemRequest({name='minecraft:blab',damage=0},1)
-requestShipment({request})
