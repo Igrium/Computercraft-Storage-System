@@ -33,6 +33,11 @@ end
 function getItemPercentage(item)
 	storageArrangement = database.getStorageArrangement()
 	
+	-- Return 0 if invalid item
+	if item.name == nil or item.damage == nil then
+		return 0
+	end
+	
 	-- Search for chests with the item
 	local chests = {}
 	for k, v in pairs(storageArrangement) do

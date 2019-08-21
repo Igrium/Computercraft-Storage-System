@@ -1,0 +1,101 @@
+-- A physical abstraction layer for farms to communicate with the storage system without installing all it's apis
+
+-- Farms contact the server with the protocal farmQuery and an array with the first element being the type,
+-- and the subsequent elements being arguements. Server then returns value with farmResponse
+
+os.loadAPI("config")
+os.loadAPI("network")
+os.loadAPI("inventory")
+os.loadAPI("database")
+os.loadAPI("storageTask")
+
+-- Validation
+function validateItemRequestArray(array)
+	if array == nil or array[1] == nil then
+		return false
+	end
+	for k,v in pairs(array) do
+		if v.item.name == nil or v.item.damage == nil or v.count == nil then
+			print("Item "..textutils.serialize(v).." is invalid!")
+			return false
+		end
+	end
+	return true
+end
+
+-- Querys
+
+-- Get the percentage of the storage system filled with an item
+function itemPercentage(query)
+	if query[2] == nil then
+		return "Usage: ['itemPercentage', item]"
+	end
+	return inventory.getItemPercentage(query[2])
+end
+
+-- Gets how many stacks of an item the storage system can hold
+function itemCapacity(query)
+	if query[2] == nil then
+		return "Usage: ['itemCapacity', item]"
+	end
+	local locations = #database.getItemLocations(query[2])
+	return locations*54
+end
+
+-- Requests a shipment to a shipment track.
+function requestShipment(query)
+	if #query < 3 then
+		return "Usage: ['itemCapacity', itemRequestArray, track]"
+	end
+	
+	if not validateItemRequestArray(query[2]) then
+		return "Invalid itemRequestArray!"
+	end
+		
+	if not type(query[3]) == 'string' then
+		return "Shippment track must be a string!"
+	end
+	
+	local task = storageTask.new("ship", query[2], query[3])
+	rednet.send(config.serverID, task, "storageRequest")
+	return true
+end
+
+
+-- Calculate the return value of a query
+function handleQuery(query)
+
+	-- Validate query
+	if type(query) ~= 'table' then
+		return "Query must be a table!"
+	elseif query[1] == nil then
+		return "Please specify a query."
+	elseif not type(query[1]) == 'string' then
+		return "Query type must be a string."
+	end
+	
+	if query[1] == 'itemPercentage' then
+		return itemPercentage(query)
+	elseif query[1] == 'itemCapacity' then
+		return itemCapacity(query)
+	elseif query[1] == 'requestShipment' then
+		return requestShipment(query)
+	else
+		return "Unknown query: "..query[1]
+	end
+	
+end
+
+function main()
+	print("Starting farm proxy server...")
+	network.setupNetwork()
+	while true do
+		local farmID
+		local query
+		farmID, query = rednet.receive("farmQuery")
+		print("Handling query from computer "..farmID..": "..textutils.serialize(query))
+		rednet.send(farmID, handleQuery(query), "farmResponse")
+	end
+end
+
+main()
