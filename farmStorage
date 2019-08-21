@@ -1,0 +1,105 @@
+-- Standalone API to be run by farms. REDNET MUST BE OPEN IN ORDER FOR API TO WORK
+
+-- ID of the computer acting as the farm proxy
+farmProxyId = 98
+
+-- Name of the track this farm should recieve shipments to
+track = '2'
+
+-- How many seconds to wait for a response from the storage system
+responseTime = 5
+
+
+-- Validation functions
+function validateItem(item)
+	if type(item) ~= 'table' then
+		return false
+	end
+
+	if type(item.name) ~= 'string' or type(item.damage) ~= 'number' then
+		return false
+	end
+	
+	return true
+end
+
+-- Constructor for itemRequest Objects (usage not mandatory)
+function itemRequest(item, count)
+	if not validateItem(item) then
+		return
+	end
+
+	return {item=item, count=count}
+end
+	
+function getItemPercentage(item)
+	-- Make sure item is valid
+	if not validateItem(item) then
+		print("Farm Storage: Invalid Item!")
+		return 0
+	end
+	
+	-- Contact the storage system
+	rednet.send(farmProxyId, {"itemPercentage", item}, "farmQuery")
+	local response = select(2, rednet.receive("farmResponse", responseTime))
+	
+	-- Handle any errors
+	if response == nil then
+		print("Farm Storage: No response from storage system!")
+		return 0
+	elseif type(response) ~= 'number' then
+		print("Storage Error: "..response)
+		return 0
+	end
+	
+	return response
+end
+
+function getItemCapacity(item)
+	-- Make sure item is valid
+	if not validateItem(item) then
+		print("Farm Storage: Invalid Item!")
+		return 0
+	end
+	
+	-- Contact the storage system
+	rednet.send(farmProxyId, {"itemCapacity", item}, "farmQuery")
+	local response =  select(2, rednet.receive("farmResponse", responseTime))
+	
+	-- Handle any errors
+	if response == nil then
+		print("Farm Storage: No response from storage system!")
+		return 0
+	elseif type(response) ~= 'number' then
+		print("Storage Error: "..response)
+		return 0
+	end
+	
+	return response
+end
+
+function requestShipment(items)
+	if type(items) ~= 'table' or type(items[1]) ~= 'table' then
+		print("Farm Storage: Shipment request must be an array of itemRequests")
+		return	
+	end
+	
+	-- Contact the storage system
+	rednet.send(farmProxyId, {"requestShipment", items, track}, "farmQuery")
+	local response =  select(2, rednet.receive("farmResponse", responseTime))
+	
+	-- Handle any errors
+	if response == nil then
+		print("Farm Storage: No response from storage system!")
+		return false
+	elseif type(response) ~= 'boolean' then
+		print("Storage Error: "..response)
+		return false
+	end
+	
+	return response
+end
+
+rednet.open("top")
+request = itemRequest({name='minecraft:blab',damage=0},1)
+requestShipment({request})
